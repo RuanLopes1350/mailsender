@@ -131,6 +131,20 @@ paths:
                     expirationMinutes: 30
                     year: 2025
                     company: Exemplo Ltda
+              exFirstAccess:
+                summary: Primeiro acesso ao sistema com código
+                value:
+                  to: destinatario@dominio.com
+                  subject: Bem-vindo(a) ao Sistema!
+                  template: first-access
+                  data:
+                    name: Ruan
+                    matricula: "12345"
+                    verificationCode: "ABCD12"
+                    systemUrl: https://exemplo.com
+                    expirationHours: 24
+                    year: 2025
+                    company: Gestão de Estoque
       responses:
         '202':
           description: E-mail aceito para envio
