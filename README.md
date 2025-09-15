@@ -266,6 +266,19 @@ npm run clean    # Limpar arquivos compilados
 
 ## 🚀 Deploy
 
+### Deployment Local
+```bash
+# Build
+npm run build
+
+# Executar
+npm start
+```
+
+### Deploy no Vercel
+Para deploy na plataforma Vercel, consulte o guia completo:
+**[📋 Guia de Deploy no Vercel](VERCEL_DEPLOY.md)**
+
 ### Variáveis de Ambiente Necessárias
 ```env
 PORT=5015

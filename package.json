@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "dev": "tsx src/server.ts",
     "watch": "tsx watch src/server.ts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "validate-vercel": "node scripts/validate-vercel.js"
   },
   "keywords": [],
   "author": "",
@@ -38,6 +39,7 @@
     "@types/yamljs": "^0.2.34"
   },
   "devDependencies": {
+    "@vercel/node": "^3.0.0",
     "chai": "^6.0.1",
     "mjml-cli": "^4.15.3",
     "mocha": "^11.7.2",
