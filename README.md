@@ -313,3 +313,4 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para de
 ---
 
 ⭐ **Se este projeto foi útil para você, considere dar uma estrela!** ⭐
+
