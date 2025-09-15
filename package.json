@@ -35,7 +35,7 @@
     "@types/mjml": "^4.7.4",
     "@types/nodemailer": "^7.0.1",
     "@types/swagger-ui-express": "^4.1.8",
-    "@types/yamljs": "^0.2.34",
+    "@types/yamljs": "^0.2.34"
   },
   "devDependencies": {
     "chai": "^6.0.1",
