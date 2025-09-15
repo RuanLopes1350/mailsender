@@ -1,93 +1,133 @@
-import fs from 'fs/promises'
-import path from 'path'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
+import DatabaseConnection from '../config/database.js'
+import ApiKeyModel, { IApiKey } from '../models/ApiKey.js'
 
-const CAMINHO_API_KEY = path.resolve('src', 'auth', 'apiKeys.json');
 const SALT_ROUNDS = 15;
+let apiKeyModel: ApiKeyModel;
 
-// Função para garantir que o arquivo apiKeys.json existe
-async function inicializarArquivoApiKeys() {
-    try {
-        await fs.access(CAMINHO_API_KEY);
-        console.log('Arquivo apiKeys.json encontrado');
-    } catch (erro) {
-        console.log('Arquivo apiKeys.json não encontrado, criando...');
-        try {
-            // Cria o diretório se não existir
-            const dirPath = path.dirname(CAMINHO_API_KEY);
-            await fs.mkdir(dirPath, { recursive: true });
-
-            // Cria o arquivo com array vazio
-            await fs.writeFile(CAMINHO_API_KEY, JSON.stringify([], null, 2));
-            console.log('Arquivo apiKeys.json criado com sucesso');
-        } catch (erroCreation) {
-            console.error('Erro ao criar apiKeys.json:', erroCreation);
-            throw erroCreation;
-        }
+// Função para garantir que o modelo está inicializado
+async function inicializarApiKeyModel() {
+    if (!apiKeyModel) {
+        const dbConnection = DatabaseConnection.getInstance();
+        await dbConnection.connect();
+        apiKeyModel = new ApiKeyModel();
     }
 }
 
-async function lerApiKeys() {
-    // Garante que o arquivo existe antes de tentar ler
-    await inicializarArquivoApiKeys();
+export async function gerarApiKey(usuario: string = 'noName'): Promise<string> {
+    await inicializarApiKeyModel();
 
-    try {
-        const dados = await fs.readFile(CAMINHO_API_KEY, 'utf-8');
-        return JSON.parse(dados);
-    } catch (erro) {
-        console.error('Erro ao ler as API keys:', erro);
-        return [];
+    // Verifica se já existe uma chave para este usuário
+    const existingKey = await apiKeyModel.findByUser(usuario);
+    if (existingKey) {
+        throw new Error(`Usuário '${usuario}' já possui uma API key ativa`);
     }
-}
 
-async function salvarApiKeys(apiKeys: any[]) {
-    await fs.writeFile(CAMINHO_API_KEY, JSON.stringify(apiKeys, null, 2));
-}
-
-export async function gerarApiKey(usuario: string = 'noName') {
     const apiKey = crypto.randomBytes(32).toString('hex');
     const hash = await bcrypt.hash(apiKey, SALT_ROUNDS);
 
-    const chaves = await lerApiKeys();
-    chaves.push({
+    const apiKeyData: Omit<IApiKey, '_id'> = {
         usuario,
         apiKey: hash,
-        createdAt: new Date().toISOString(),
-        lastUsed: null
-    });
-    await salvarApiKeys(chaves);
+        createdAt: new Date(),
+        lastUsed: null,
+        isActive: true
+    };
+
+    await apiKeyModel.create(apiKeyData);
+    console.log(`API Key gerada para o usuário: ${usuario}`);
 
     return apiKey;
 }
 
-export async function validarApiKey(apiKey: string) {
-    const chaves = await lerApiKeys();
-    for (const { apiKey: hash } of chaves) {
-        if (await bcrypt.compare(apiKey, hash)) return true;
+export async function validarApiKey(apiKey: string): Promise<boolean> {
+    await inicializarApiKeyModel();
+
+    try {
+        const chaves = await apiKeyModel.findAll();
+
+        for (const chave of chaves) {
+            const isValid = await bcrypt.compare(apiKey, chave.apiKey);
+            if (isValid) {
+                // Atualiza o lastUsed
+                await apiKeyModel.updateLastUsed(chave.usuario);
+                return true;
+            }
+        }
+        return false;
+    } catch (error) {
+        console.error('Erro ao validar API key:', error);
+        return false;
     }
-    return false;
 }
 
-export async function listarApiKeys() {
-    const chaves = await lerApiKeys();
-    return chaves.map(({ usuario, createdAt }: any) => ({ usuario, createdAt }));
+export async function listarApiKeys(): Promise<{ usuario: string; createdAt: Date; lastUsed: Date | null }[]> {
+    await inicializarApiKeyModel();
+
+    try {
+        const chaves = await apiKeyModel.findAll();
+        return chaves.map(({ usuario, createdAt, lastUsed }) => ({
+            usuario,
+            createdAt,
+            lastUsed
+        }));
+    } catch (error) {
+        console.error('Erro ao listar API keys:', error);
+        return [];
+    }
 }
 
-export async function revogarApiKey(nomeUsuario: string) {
-    const chaves = await lerApiKeys();
-    const index = chaves.findIndex((chave: { usuario: string; }) => chave.usuario === nomeUsuario);
-    if (index === -1) return false;
-    chaves.splice(index, 1);
-    await salvarApiKeys(chaves);
-    return true;
+export async function revogarApiKey(nomeUsuario: string): Promise<boolean> {
+    await inicializarApiKeyModel();
+
+    try {
+        const sucesso = await apiKeyModel.deactivate(nomeUsuario);
+        if (sucesso) {
+            console.log(`API Key revogada para o usuário: ${nomeUsuario}`);
+        } else {
+            console.log(`Nenhuma API Key ativa encontrada para o usuário: ${nomeUsuario}`);
+        }
+        return sucesso;
+    } catch (error) {
+        console.error('Erro ao revogar API key:', error);
+        return false;
+    }
+}
+
+export async function removerApiKey(nomeUsuario: string): Promise<boolean> {
+    await inicializarApiKeyModel();
+
+    try {
+        const sucesso = await apiKeyModel.deleteByUser(nomeUsuario);
+        if (sucesso) {
+            console.log(`API Key removida permanentemente para o usuário: ${nomeUsuario}`);
+        } else {
+            console.log(`Nenhuma API Key encontrada para o usuário: ${nomeUsuario}`);
+        }
+        return sucesso;
+    } catch (error) {
+        console.error('Erro ao remover API key:', error);
+        return false;
+    }
+}
+
+export async function verificarUsuarioExiste(usuario: string): Promise<boolean> {
+    await inicializarApiKeyModel();
+
+    try {
+        return await apiKeyModel.exists(usuario);
+    } catch (error) {
+        console.error('Erro ao verificar usuário:', error);
+        return false;
+    }
 }
 
 // Função pública para inicializar o sistema de API keys
-export async function inicializarSistemaApiKeys() {
+export async function inicializarSistemaApiKeys(): Promise<boolean> {
     try {
-        await inicializarArquivoApiKeys();
-        console.log('Sistema de API Keys inicializado com sucesso');
+        await inicializarApiKeyModel();
+        console.log('Sistema de API Keys inicializado com sucesso (MongoDB)');
         return true;
     } catch (erro) {
         console.error('Erro ao inicializar sistema de API Keys:', erro);
