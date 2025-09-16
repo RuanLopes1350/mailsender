@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import DatabaseConnection from '../config/database.js'
 import ApiKeyModel, { IApiKey } from '../models/apiKey.js'
+import { create } from 'domain';
 
 const SALT_ROUNDS = 15;
 let apiKeyModel: ApiKeyModel;
@@ -87,9 +88,9 @@ export async function listarApiKeys(): Promise<{ usuario: string; createdAt: str
     try {
         const chaves = await apiKeyModel.findAll();
         return chaves.map(({ usuario, createdAt, lastUsed }) => ({
-            usuario,
-            createdAt,
-            lastUsed
+            usuario: usuario as string,
+            createdAt: createdAt as string,
+            lastUsed: lastUsed as string | null
         }));
     } catch (error) {
         console.error('Erro ao listar API keys:', error);
