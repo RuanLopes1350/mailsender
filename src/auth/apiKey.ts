@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import DatabaseConnection from '../config/database.js'
-import ApiKeyModel, { IApiKey } from '../models/ApiKey.js'
+import ApiKeyModel, { IApiKey } from '../models/apiKey.js'
 
 const SALT_ROUNDS = 15;
 let apiKeyModel: ApiKeyModel;
@@ -30,7 +30,7 @@ export async function gerarApiKey(usuario: string = 'noName'): Promise<string> {
     const apiKeyData: Omit<IApiKey, '_id'> = {
         usuario,
         apiKey: hash,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
         lastUsed: null,
         isActive: true
     };
@@ -62,7 +62,26 @@ export async function validarApiKey(apiKey: string): Promise<boolean> {
     }
 }
 
-export async function listarApiKeys(): Promise<{ usuario: string; createdAt: Date; lastUsed: Date | null }[]> {
+export async function obterUsuarioPorApiKey(apiKey: string): Promise<string | null> {
+    await inicializarApiKeyModel();
+
+    try {
+        const chaves = await apiKeyModel.findAll();
+
+        for (const chave of chaves) {
+            const isValid = await bcrypt.compare(apiKey, chave.apiKey);
+            if (isValid) {
+                return chave.usuario;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Erro ao obter usuário por API key:', error);
+        return null;
+    }
+}
+
+export async function listarApiKeys(): Promise<{ usuario: string; createdAt: string; lastUsed: string | null }[]> {
     await inicializarApiKeyModel();
 
     try {

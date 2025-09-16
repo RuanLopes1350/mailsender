@@ -524,9 +524,14 @@
                 <p><strong>Versão:</strong> 1.0.0</p>
                 <p><strong>Uptime:</strong> <span id="uptime">Calculando...</span></p>
                 <p><strong>Última verificação:</strong> <span id="last-check">-</span></p>
-                <button class="btn btn-primary" onclick="checkHealth()">
-                    <i class="fas fa-sync-alt"></i> Verificar Saúde
-                </button>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="checkHealth()">
+                        <i class="fas fa-sync-alt"></i> Verificar Saúde
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadDashboardStats()" style="margin-left: 10px;">
+                        <i class="fas fa-chart-bar"></i> Atualizar Stats
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -804,7 +809,7 @@
 
                 if (data.ok) {
                     alert('✅ Serviço online e funcionando!');
-                    document.getElementById('last-check').textContent = new Date().toLocaleString();
+                    document.getElementById('last-check').textContent = new Date().toLocaleString('pt-BR');
                 }
             } catch (error) {
                 alert('❌ Erro ao verificar saúde do serviço: ' + error.message);
@@ -915,10 +920,7 @@
 
         // Refresh logs
         function refreshLogs() {
-            const logsContainer = document.getElementById('logs-container');
-            const newLog = `[INFO] ${new Date().toLocaleString()} - Logs atualizados`;
-            logsContainer.innerHTML += '<div>' + newLog + '</div>';
-            logsContainer.scrollTop = logsContainer.scrollHeight;
+            loadDashboardStats(); // Recarrega estatísticas e logs recentes
         }
 
         // Load API keys
@@ -941,8 +943,8 @@
                     tableBody.innerHTML = keys.map(key => `
                         <tr>
                             <td>${key.usuario}</td>
-                            <td>${new Date(key.createdAt).toLocaleString()}</td>
-                            <td>${key.lastUsed ? new Date(key.lastUsed).toLocaleString() : 'Nunca'}</td>
+                            <td>${new Date(key.createdAt).toLocaleString('pt-BR')}</td>
+                            <td>${key.lastUsed ? new Date(key.lastUsed).toLocaleString('pt-BR') : 'Nunca'}</td>
                             <td>
                                 <span class="status-indicator status-online">
                                     <i class="fas fa-circle"></i> Ativa
@@ -992,10 +994,41 @@
             document.getElementById('logs-container').innerHTML = '<div>[INFO] Logs limpos</div>';
         }
 
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/stats');
+                const stats = await response.json();
+
+                if (response.ok) {
+                    // Update email stats
+                    document.getElementById('emails-sent').textContent = stats.emails.sent || 0;
+
+                    // Update request stats
+                    document.getElementById('api-requests').textContent = stats.requests.total || 0;
+
+                    // Update recent activity in logs
+                    if (stats.recentActivity && stats.recentActivity.length > 0) {
+                        const logsContainer = document.getElementById('logs-container');
+                        const recentLogs = stats.recentActivity.map(activity =>
+                            `<div>[${activity.status >= 400 ? 'ERROR' : 'INFO'}] ${new Date(activity.createdAt).toLocaleString('pt-BR')} - ${activity.method} ${activity.path} (${activity.status}) - ${activity.responseTime}ms</div>`
+                        ).join('');
+                        logsContainer.innerHTML = recentLogs;
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
         // Initialize
         loadServerStatus(); // Busca o tempo de início do servidor
         setInterval(updateUptime, 1000);
         loadApiKeys(); // Carregar chaves ao inicializar
+        loadDashboardStats(); // Carregar estatísticas do dashboard
+
+        // Atualizar estatísticas a cada 30 segundos
+        setInterval(loadDashboardStats, 30000);
 
         // Close modal when clicking outside
         window.addEventListener('click', (e) => {

@@ -5,8 +5,8 @@ export interface IApiKey {
     _id?: ObjectId;
     usuario: string;
     apiKey: string;
-    createdAt: Date;
-    lastUsed: Date | null;
+    createdAt: string;
+    lastUsed: string | null;
     isActive: boolean;
 }
 
@@ -54,7 +54,7 @@ export class ApiKeyModel {
     async updateLastUsed(usuario: string): Promise<boolean> {
         const result = await this.collection.updateOne(
             { usuario, isActive: true },
-            { $set: { lastUsed: new Date() } }
+            { $set: { lastUsed: new Date().toISOString() } }
         );
         return result.modifiedCount > 0;
     }

@@ -2,14 +2,20 @@ import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
 import { apiKeyMiddleware } from './auth/apiKeyMiddleware.js';
+import { requestLogger, RequestWithUser } from './middleware/requestLogger.js';
 import { sendMail } from './mail/index.js';
 import { gerarApiKey, listarApiKeys, revogarApiKey, inicializarSistemaApiKeys } from './auth/apiKey.js';
+import { logEmail, updateEmailStatus, getEmailStats, getRecentEmails } from './services/emailService.js';
+import { getRequestStats, getRecentActivity } from './services/requestService.js';
 
 const serverStartTime: Number = Date.now();
 
 dotenv.config()
 const app = express();
 app.use(express.json());
+
+// Middleware de log de requisições
+app.use(requestLogger);
 
 //Swagger
 // const swaggerDoc = YAML.load('./openapi.yaml');
@@ -28,6 +34,28 @@ app.get('/status', (_req, res) => {
     ok: true,
     startTime: serverStartTime
   });
+});
+
+// Rota para estatísticas do dashboard
+app.get('/stats', async (_req, res) => {
+  try {
+    const [emailStats, requestStats, recentEmails, recentActivity] = await Promise.all([
+      getEmailStats(),
+      getRequestStats(),
+      getRecentEmails(5),
+      getRecentActivity(10)
+    ]);
+
+    res.json({
+      emails: emailStats,
+      requests: requestStats,
+      recentEmails,
+      recentActivity
+    });
+  } catch (error) {
+    console.error('Erro ao obter estatísticas:', error);
+    res.status(500).json({ message: 'Erro ao obter estatísticas' });
+  }
 });
 
 app.post('/keys/generate', async (req, res) => {
@@ -71,16 +99,42 @@ app.delete('/keys/:name', async (req, res) => {
 });
 
 // Envio dos emails
-app.post('/emails/send', apiKeyMiddleware, async (req, res) => {
+app.post('/emails/send', apiKeyMiddleware, async (req: RequestWithUser, res) => {
+  let emailId: string | null = null;
+
   try {
     const emailData = {
       ...req.body.data,
       ano: new Date().getFullYear(),
     };
+
+    // Log do email antes de enviar
+    if (req.apiKeyUser) {
+      emailId = await logEmail({
+        to: req.body.to,
+        subject: req.body.subject,
+        template: req.body.template,
+        data: emailData,
+        apiKeyUser: req.apiKeyUser
+      });
+    }
+
     const info = await sendMail({ ...req.body, data: emailData });
+
+    // Atualiza status para sucesso
+    if (emailId) {
+      await updateEmailStatus(emailId, 'sent');
+    }
+
     res.status(202).json({ message: 'E-mail enfileirado', info });
   } catch (err) {
     console.error(err);
+
+    // Atualiza status para erro
+    if (emailId) {
+      await updateEmailStatus(emailId, 'failed', (err as Error).message);
+    }
+
     res.status(500).json({ message: 'Falha ao enviar e-mail', error: (err as Error).message });
   }
 });
