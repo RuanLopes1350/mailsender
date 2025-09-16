@@ -302,15 +302,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para de
 
 **Ruan Lopes**
 - 🔗 LinkedIn: [ruan-lopes-1350s](https://www.linkedin.com/in/ruan-lopes-1350s)
-- 🐙 GitHub: [RuanLopes1350](https://github.com/RuanLopes1350)
 - 📧 E-mail: contatoruanlopes1350@gmail.com
-
-## 🙏 Agradecimentos
-
-- [MJML](https://mjml.io/) - Framework para e-mails responsivos
-- [Nodemailer](https://nodemailer.com/) - Biblioteca para envio de e-mails
-- [Express](https://expressjs.com/) - Framework web minimalista
-- [TypeScript](https://www.typescriptlang.org/) - JavaScript com tipagem
 
 ---
 
