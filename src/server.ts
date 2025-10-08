@@ -24,6 +24,9 @@ app.use(requestLogger);
 // Painel de administração
 app.use('/painel', express.static(path.resolve('public')));
 
+// Servir os assets (CSS/JS) pela raiz localmente
+app.use(express.static(path.resolve('public'))); 
+
 // Health Check
 app.get('/api', (_req, res) =>
   res.json({ ok: true, message: 'Micro-serviço online' })

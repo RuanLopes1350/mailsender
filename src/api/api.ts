@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import path from 'path';
 import dotenv from 'dotenv';
 import { apiKeyMiddleware } from '../auth/apiKeyMiddleware.js';
 import { requestLogger, RequestWithUser } from '../middleware/requestLogger.js';
