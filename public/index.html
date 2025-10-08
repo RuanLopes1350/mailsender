@@ -151,7 +151,7 @@
 
                 <div class="form-group">
                     <label for="testTemplate">Template:</label>
-                    <select id="testTemplate">
+                    <select id="testTemplate" onchange="updateTemplateExample()">
                         <option value="bemvindo">Bem-vindo</option>
                         <option value="generico">Genérico</option>
                     </select>
@@ -159,9 +159,26 @@
 
                 <div class="form-group">
                     <label for="testData">Dados do Template (JSON):</label>
-                    <textarea id="testData" rows="6" placeholder='{"nome": "João", "mensagem": "Olá!"}'>{
-  "nome": "Usuário Teste",
-  "mensagem": "Esta é uma mensagem de teste"
+                    <div id="templateInfo" class="alert alert-info" style="margin-bottom: 10px; display: block;">
+                        <strong>📝 Campos do template "Bem-vindo":</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px; font-size: 0.9rem;">
+                            <li><code>nomeSistema</code> (opcional) - Nome do seu sistema/empresa</li>
+                            <li><code>nome</code> (opcional) - Nome do destinatário</li>
+                            <li><code>mensagem</code> (opcional) - Mensagem customizada</li>
+                            <li><code>mostrarBotao</code> (true/false) - Exibir botão de ação</li>
+                            <li><code>textoBotao</code> - Texto do botão (se mostrarBotao=true)</li>
+                            <li><code>urlBotao</code> - URL do botão (se mostrarBotao=true)</li>
+                            <li><code>corPrimaria</code> - Cor do header (ex: "#4F46E5")</li>
+                            <li><code>logoUrl</code> - URL do logo (substitui nomeSistema)</li>
+                        </ul>
+                    </div>
+                    <textarea id="testData" rows="10" placeholder='{"nome": "João", "nomeSistema": "MinhaApp"}'>{
+  "nomeSistema": "Vitrine",
+  "nome": "João Silva",
+  "mensagem": "Estamos felizes em tê-lo conosco! Explore todas as funcionalidades.",
+  "mostrarBotao": true,
+  "textoBotao": "Acessar Plataforma",
+  "urlBotao": "https://exemplo.com/login"
 }</textarea>
                 </div>
 

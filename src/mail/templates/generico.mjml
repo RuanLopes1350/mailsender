@@ -1,28 +1,188 @@
 <mjml>
   <mj-head>
-    <mj-title>{{assunto}}</mj-title>
-    <mj-preview>Você recebeu uma nova mensagem.</mj-preview>
+    <mj-title>{{#if titulo}}{{titulo}}{{else}}Mensagem{{/if}}</mj-title>
+    <mj-preview>{{#if preview}}{{preview}}{{else}}Você recebeu uma nova mensagem.{{/if}}</mj-preview>
     <mj-attributes>
-      <mj-all font-family="Arial, sans-serif" />
+      <mj-all font-family="Arial, Helvetica, sans-serif" />
       <mj-text font-size="16px" line-height="24px" color="#333333" />
       <mj-section background-color="#ffffff" />
     </mj-attributes>
+    <mj-style>
+      .destaque { 
+        background-color: {{#if corDestaque}}{{corDestaque}}{{else}}#F3F4F6{{/if}}; 
+        padding: 15px; 
+        border-radius: 8px;
+        border-left: 4px solid {{#if corPrimaria}}{{corPrimaria}}{{else}}#4F46E5{{/if}};
+      }
+    </mj-style>
   </mj-head>
-  <mj-body background-color="#f3f3f3">
-    <mj-section padding="20px">
+  <mj-body background-color="#f4f4f4">
+    <!-- Header (opcional) -->
+    {{#if mostrarHeader}}
+    <mj-section background-color="{{#if corPrimaria}}{{corPrimaria}}{{else}}#4F46E5{{/if}}" padding="20px">
       <mj-column>
-        <mj-text font-size="24px" font-weight="bold" align="center"> {{titulo}} </mj-text>
+        {{#if logoUrl}}
+        <mj-image src="{{logoUrl}}" width="120px" align="center" alt="Logo" />
+        {{else}}
+        <mj-text align="center" color="#ffffff" font-size="24px" font-weight="bold">
+          {{#if nomeSistema}}{{nomeSistema}}{{else}}Notificação{{/if}}
+        </mj-text>
+        {{/if}}
       </mj-column>
     </mj-section>
-    <mj-section padding="0 20px 20px 20px">
+    {{/if}}
+
+    <!-- Conteúdo Principal -->
+    <mj-section padding="40px 20px">
       <mj-column>
-        <mj-divider border-color="#cccccc"></mj-divider>
-        <mj-text padding-top="20px"> {{{conteudo}}} </mj-text>
+        <!-- Título -->
+        {{#if titulo}}
+        <mj-text font-size="28px" font-weight="bold" align="{{#if alinharTitulo}}{{alinharTitulo}}{{else}}center{{/if}}" color="#1F2937">
+          {{titulo}}
+        </mj-text>
+        {{/if}}
+
+        <!-- Subtítulo (opcional) -->
+        {{#if subtitulo}}
+        <mj-text font-size="18px" color="#6B7280" align="{{#if alinharTitulo}}{{alinharTitulo}}{{else}}center{{/if}}" padding-top="10px">
+          {{subtitulo}}
+        </mj-text>
+        {{/if}}
+
+        <!-- Saudação (opcional) -->
+        {{#if nome}}
+        <mj-text padding-top="20px" font-size="16px">
+          Olá {{nome}},
+        </mj-text>
+        {{/if}}
+
+        <!-- Divisor (opcional) -->
+        {{#if mostrarDivisor}}
+        <mj-divider border-color="#E5E7EB" border-width="1px" padding="20px 0"></mj-divider>
+        {{/if}}
+
+        <!-- Conteúdo/Mensagem Principal -->
+        {{#if mensagem}}
+        <mj-text padding-top="20px" font-size="16px" line-height="28px">
+          {{{mensagem}}}
+        </mj-text>
+        {{/if}}
+
+        <!-- Conteúdo HTML (para conteúdo mais complexo) -->
+        {{#if conteudo}}
+        <mj-text padding-top="20px" font-size="16px" line-height="28px">
+          {{{conteudo}}}
+        </mj-text>
+        {{/if}}
+
+        <!-- Box de Destaque (opcional) -->
+        {{#if textoDestaque}}
+        <mj-text padding-top="25px" css-class="destaque">
+          {{{textoDestaque}}}
+        </mj-text>
+        {{/if}}
+
+        <!-- Lista de Itens (opcional) -->
+        {{#if itens}}
+        <mj-text padding-top="20px" font-size="16px" line-height="28px">
+          <ul style="margin: 0; padding-left: 20px;">
+            {{#each itens}}
+            <li style="margin-bottom: 10px;">{{{this}}}</li>
+            {{/each}}
+          </ul>
+        </mj-text>
+        {{/if}}
+
+        <!-- Dados em Tabela (opcional) -->
+        {{#if dados}}
+        <mj-text padding-top="20px">
+          <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+            {{#each dados}}
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #E5E7EB; font-weight: bold; color: #6B7280;">{{this.label}}</td>
+              <td style="padding: 10px; border-bottom: 1px solid #E5E7EB;">{{this.valor}}</td>
+            </tr>
+            {{/each}}
+          </table>
+        </mj-text>
+        {{/if}}
+
+        <!-- Botão Principal (opcional) -->
+        {{#if mostrarBotao}}
+        <mj-button 
+          href="{{#if urlBotao}}{{urlBotao}}{{else}}#{{/if}}" 
+          background-color="{{#if corBotao}}{{corBotao}}{{else}}#4F46E5{{/if}}"
+          color="#ffffff"
+          font-size="16px"
+          font-weight="bold"
+          border-radius="8px"
+          padding="15px 30px"
+          align="center">
+          {{#if textoBotao}}{{textoBotao}}{{else}}Ver Detalhes{{/if}}
+        </mj-button>
+        {{/if}}
+
+        <!-- Botão Secundário (opcional) -->
+        {{#if mostrarBotaoSecundario}}
+        <mj-button 
+          href="{{#if urlBotaoSecundario}}{{urlBotaoSecundario}}{{else}}#{{/if}}" 
+          background-color="#FFFFFF"
+          color="{{#if corBotao}}{{corBotao}}{{else}}#4F46E5{{/if}}"
+          border="2px solid {{#if corBotao}}{{corBotao}}{{else}}#4F46E5{{/if}}"
+          font-size="16px"
+          font-weight="bold"
+          border-radius="8px"
+          padding="15px 30px"
+          align="center">
+          {{#if textoBotaoSecundario}}{{textoBotaoSecundario}}{{else}}Cancelar{{/if}}
+        </mj-button>
+        {{/if}}
+
+        <!-- Nota/Aviso (opcional) -->
+        {{#if nota}}
+        <mj-text padding-top="30px" font-size="14px" color="#6B7280" line-height="22px">
+          <strong>Nota:</strong> {{{nota}}}
+        </mj-text>
+        {{/if}}
+
+        <!-- Informação Adicional (opcional) -->
+        {{#if infoAdicional}}
+        <mj-text padding-top="20px" font-size="14px" color="#6B7280" line-height="22px">
+          {{{infoAdicional}}}
+        </mj-text>
+        {{/if}}
       </mj-column>
     </mj-section>
-    <mj-section padding-bottom="20px">
+
+    <!-- Separador -->
+    <mj-section padding="0 20px">
       <mj-column>
-        <mj-text align="center" font-size="12px" color="#888888"> &copy; {{ano}} Seu Nome ou Nome da Empresa </mj-text>
+        <mj-divider border-color="#E5E7EB" border-width="1px" />
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section padding="30px 20px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#9CA3AF" line-height="20px">
+          {{#if textoFooter}}
+            {{{textoFooter}}}
+          {{else}}
+            &copy; {{ano}} {{#if nomeSistema}}{{nomeSistema}}{{else}}Todos os direitos reservados{{/if}}
+          {{/if}}
+        </mj-text>
+        {{#if enderecoEmpresa}}
+        <mj-text align="center" font-size="11px" color="#9CA3AF" padding-top="5px">
+          {{enderecoEmpresa}}
+        </mj-text>
+        {{/if}}
+        {{#if mostrarLinks}}
+        <mj-text align="center" font-size="12px" color="#9CA3AF" padding-top="10px">
+          {{#if linkSite}}<a href="{{linkSite}}" style="color: #4F46E5; text-decoration: none;">Site</a>{{/if}}
+          {{#if linkSuporte}}{{#if linkSite}} | {{/if}}<a href="{{linkSuporte}}" style="color: #4F46E5; text-decoration: none;">Suporte</a>{{/if}}
+          {{#if linkPrivacidade}}{{#if linkSuporte}} | {{else}}{{#if linkSite}} | {{/if}}{{/if}}<a href="{{linkPrivacidade}}" style="color: #4F46E5; text-decoration: none;">Privacidade</a>{{/if}}
+        </mj-text>
+        {{/if}}
       </mj-column>
     </mj-section>
   </mj-body>

@@ -310,3 +310,97 @@ setInterval(() => {
         loadDashboardData();
     }
 }, 30000);
+
+// ==================== TEMPLATE EXAMPLES ====================
+
+function updateTemplateExample() {
+    const template = document.getElementById('testTemplate').value;
+    const infoDiv = document.getElementById('templateInfo');
+    const dataTextarea = document.getElementById('testData');
+    
+    const templates = {
+        bemvindo: {
+            info: `<strong>📝 Campos do template "Bem-vindo":</strong>
+                <ul style="margin: 10px 0; padding-left: 20px; font-size: 0.9rem;">
+                    <li><code>nomeSistema</code> - Nome do seu sistema/empresa</li>
+                    <li><code>nome</code> - Nome do destinatário</li>
+                    <li><code>mensagem</code> - Mensagem de boas-vindas customizada</li>
+                    <li><code>mensagemSecundaria</code> - Texto adicional</li>
+                    <li><code>itens</code> - Array com lista de benefícios/recursos</li>
+                    <li><code>mostrarBotao</code> (true/false) - Exibir botão</li>
+                    <li><code>textoBotao</code> - Texto do botão</li>
+                    <li><code>urlBotao</code> - URL do botão</li>
+                    <li><code>corPrimaria</code> - Cor do header (ex: "#4F46E5")</li>
+                    <li><code>corBotao</code> - Cor do botão</li>
+                    <li><code>logoUrl</code> - URL do logo</li>
+                    <li><code>infoAdicional</code> - Informações extras no rodapé</li>
+                </ul>`,
+            example: `{
+  "nomeSistema": "Vitrine",
+  "nome": "João Silva",
+  "mensagem": "Estamos felizes em tê-lo conosco! Explore todas as funcionalidades da nossa plataforma.",
+  "mensagemSecundaria": "Preparamos algumas dicas para você começar:",
+  "itens": [
+    "Complete seu perfil para personalizar sua experiência",
+    "Explore os recursos disponíveis no menu principal",
+    "Entre em contato com nosso suporte se tiver dúvidas"
+  ],
+  "mostrarBotao": true,
+  "textoBotao": "Acessar Plataforma",
+  "urlBotao": "https://exemplo.com/login",
+  "corPrimaria": "#4F46E5"
+}`
+        },
+        generico: {
+            info: `<strong>📝 Campos do template "Genérico":</strong>
+                <ul style="margin: 10px 0; padding-left: 20px; font-size: 0.9rem;">
+                    <li><code>nomeSistema</code> - Nome do sistema (aparece no header)</li>
+                    <li><code>mostrarHeader</code> (true/false) - Exibir header</li>
+                    <li><code>titulo</code> - Título principal do email</li>
+                    <li><code>subtitulo</code> - Subtítulo</li>
+                    <li><code>nome</code> - Nome do destinatário (para saudação)</li>
+                    <li><code>mensagem</code> - Conteúdo principal (HTML permitido)</li>
+                    <li><code>conteudo</code> - Conteúdo alternativo/adicional</li>
+                    <li><code>textoDestaque</code> - Texto em caixa destacada</li>
+                    <li><code>itens</code> - Array com lista de itens</li>
+                    <li><code>dados</code> - Array de {label, valor} para tabela</li>
+                    <li><code>mostrarBotao</code> (true/false) - Botão principal</li>
+                    <li><code>textoBotao</code> / <code>urlBotao</code> - Configurações do botão</li>
+                    <li><code>mostrarBotaoSecundario</code> - Segundo botão</li>
+                    <li><code>nota</code> - Nota/aviso no final</li>
+                    <li><code>corPrimaria</code> / <code>corBotao</code> - Cores customizadas</li>
+                    <li><code>logoUrl</code> - URL do logo</li>
+                </ul>`,
+            example: `{
+  "nomeSistema": "Sistema de Notificações",
+  "mostrarHeader": true,
+  "titulo": "Confirmação de Pedido",
+  "subtitulo": "Pedido #12345",
+  "nome": "Maria Santos",
+  "mensagem": "Seu pedido foi confirmado com sucesso e está sendo processado.",
+  "textoDestaque": "⏱️ <strong>Previsão de entrega:</strong> 3-5 dias úteis",
+  "dados": [
+    { "label": "Número do Pedido", "valor": "#12345" },
+    { "label": "Data", "valor": "07/10/2025" },
+    { "label": "Valor Total", "valor": "R$ 299,90" }
+  ],
+  "mostrarBotao": true,
+  "textoBotao": "Rastrear Pedido",
+  "urlBotao": "https://exemplo.com/rastreio/12345",
+  "nota": "Você receberá atualizações por email sobre o status da entrega.",
+  "corPrimaria": "#10B981"
+}`
+        }
+    };
+    
+    const selectedTemplate = templates[template];
+    if (selectedTemplate) {
+        infoDiv.innerHTML = selectedTemplate.info;
+        dataTextarea.value = selectedTemplate.example;
+    }
+}
+
+// Inicializa o exemplo do primeiro template
+document.addEventListener('DOMContentLoaded', () => {
+    updateTemplateExample();
+});
