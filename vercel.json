@@ -4,27 +4,24 @@
     {
       "src": "dist/api/api.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/painel/(.*)",
-      "dest": "/public/$1"
+      "src": "/painel",
+      "dest": "/dist/public/index.html"
     },
     {
-      "src": "/painel",
-      "dest": "/public/index.html"
+      "src": "/styles.css",
+      "dest": "/dist/public/styles.css"
+    },
+    {
+      "src": "/script.js",
+      "dest": "/dist/public/script.js"
     },
     {
       "src": "/(.*)",
       "dest": "/dist/api/api.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
