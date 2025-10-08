@@ -12,6 +12,9 @@
       "dest": "/public/$1"
     },
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/painel",
       "dest": "/public/index.html"
     },

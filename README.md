@@ -9,9 +9,9 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.0+-green.svg)](https://www.mongodb.com/)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
 
-**Microserviço para envio de emails com templates personalizáveis, painel administrativo completo e autenticação por API Keys.**
+**Microserviço profissional para envio de emails com templates personalizáveis, painel administrativo completo e autenticação por API Keys.**
 
-[🚀 Ver Demo](#) • [📖 Tutorial](TUTORIAL.md) • [🐛 Reportar Bug](https://github.com/RuanLopes1350/mailsender-ts/issues)
+[🚀 Ver Demo](https://mailsenderts.onrender.com/painel/) • [📖 Tutorial](TUTORIAL.md) • [🐛 Reportar Bug](https://github.com/RuanLopes1350/mailsender-ts/issues)
 
 </div>
 
@@ -37,7 +37,7 @@
 
 ## 🎯 Sobre o Projeto
 
-**Mail Sender** é um microserviço para envio de emails transacionais, desenvolvido com Node.js, TypeScript e Express. Ele foi projetado para ser facilmente integrado a qualquer aplicação, oferecendo templates flexíveis e personalizáveis em MJML.
+**Mail Sender** é um microserviço completo e profissional para envio de emails transacionais, desenvolvido com Node.js, TypeScript e Express. Ele foi projetado para ser facilmente integrado a qualquer aplicação, oferecendo templates flexíveis e personalizáveis em MJML.
 
 ### Por que usar?
 
@@ -62,6 +62,7 @@
 - ⚡ **Performance** otimizada para produção
 
 ### 🖥️ Painel Administrativo
+- � **Dashboard** com métricas em tempo real
 - 🔑 **Gerenciamento de API Keys** (criar, listar, revogar)
 - ✉️ **Teste de emails** diretamente pelo painel
 - � **Logs de atividade** recentes
