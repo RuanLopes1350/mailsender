@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mail Sender - Painel Administrativo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📧 Mail Sender</h1>
+            <p class="subtitle">Painel Administrativo</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="dashboard">
+                📊 Dashboard
+            </button>
+            <button class="tab-button" data-tab="keys">
+                🔑 API Keys
+            </button>
+            <button class="tab-button" data-tab="test">
+                ✉️ Testar Email
+            </button>
+            <button class="tab-button" data-tab="logs">
+                📜 Logs Recentes
+            </button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📨</div>
+                    <div class="stat-info">
+                        <h3 id="totalEmails">-</h3>
+                        <p>Total de Emails</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3 id="successEmails">-</h3>
+                        <p>Emails Enviados</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-info">
+                        <h3 id="failedEmails">-</h3>
+                        <p>Emails Falhados</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔌</div>
+                    <div class="stat-info">
+                        <h3 id="totalRequests">-</h3>
+                        <p>Total de Requisições</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📈 Emails Recentes</h2>
+                <div class="table-container">
+                    <table id="recentEmailsTable">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Para</th>
+                                <th>Assunto</th>
+                                <th>Template</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentEmailsBody">
+                            <tr>
+                                <td colspan="5" class="loading">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Keys Tab -->
+        <div class="tab-content" id="keys">
+            <div class="section">
+                <h2>🔑 Gerenciar API Keys</h2>
+                
+                <div class="form-group">
+                    <label for="keyName">Nome da Nova Chave:</label>
+                    <div class="input-group">
+                        <input type="text" id="keyName" placeholder="Ex: producao, desenvolvimento, teste">
+                        <button class="btn btn-primary" onclick="generateApiKey()">
+                            ➕ Gerar Chave
+                        </button>
+                    </div>
+                </div>
+
+                <div id="newKeyDisplay" class="alert alert-success" style="display: none;">
+                    <h3>✅ Chave Gerada com Sucesso!</h3>
+                    <p><strong>ATENÇÃO:</strong> Guarde esta chave em local seguro. Ela não será mostrada novamente!</p>
+                    <div class="key-display">
+                        <code id="generatedKey"></code>
+                        <button class="btn-copy" onclick="copyToClipboard()">📋 Copiar</button>
+                    </div>
+                </div>
+
+                <h3>Chaves Existentes</h3>
+                <div class="table-container">
+                    <table id="apiKeysTable">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Prefixo</th>
+                                <th>Criada em</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="apiKeysBody">
+                            <tr>
+                                <td colspan="4" class="loading">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Email Tab -->
+        <div class="tab-content" id="test">
+            <div class="section">
+                <h2>✉️ Enviar Email de Teste</h2>
+                
+                <div class="form-group">
+                    <label for="testApiKey">API Key:</label>
+                    <input type="password" id="testApiKey" placeholder="Sua API Key">
+                </div>
+
+                <div class="form-group">
+                    <label for="testTo">Para (email):</label>
+                    <input type="email" id="testTo" placeholder="destinatario@exemplo.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="testSubject">Assunto:</label>
+                    <input type="text" id="testSubject" placeholder="Assunto do email">
+                </div>
+
+                <div class="form-group">
+                    <label for="testTemplate">Template:</label>
+                    <select id="testTemplate">
+                        <option value="bemvindo">Bem-vindo</option>
+                        <option value="generico">Genérico</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="testData">Dados do Template (JSON):</label>
+                    <textarea id="testData" rows="6" placeholder='{"nome": "João", "mensagem": "Olá!"}'>{
+  "nome": "Usuário Teste",
+  "mensagem": "Esta é uma mensagem de teste"
+}</textarea>
+                </div>
+
+                <button class="btn btn-primary btn-large" onclick="sendTestEmail()">
+                    🚀 Enviar Email de Teste
+                </button>
+
+                <div id="testResult" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- Logs Tab -->
+        <div class="tab-content" id="logs">
+            <div class="section">
+                <h2>📜 Atividade Recente</h2>
+                <div class="table-container">
+                    <table id="activityTable">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Método</th>
+                                <th>Endpoint</th>
+                                <th>Status</th>
+                                <th>Usuário</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityBody">
+                            <tr>
+                                <td colspan="5" class="loading">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Mail Sender v1.0 - Sistema de Envio de Emails</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

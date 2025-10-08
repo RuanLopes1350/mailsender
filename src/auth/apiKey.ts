@@ -81,13 +81,14 @@ export async function obterUsuarioPorApiKey(apiKey: string): Promise<string | nu
     }
 }
 
-export async function listarApiKeys(): Promise<{ usuario: string; createdAt: string; lastUsed: string | null }[]> {
+export async function listarApiKeys(): Promise<{ name: string; prefix: string; createdAt: string; lastUsed: string | null }[]> {
     await inicializarApiKeyModel();
 
     try {
         const chaves = await apiKeyModel.findAll();
-        return chaves.map(({ usuario, createdAt, lastUsed }: IApiKey) => ({
-            usuario: usuario as string,
+        return chaves.map(({ usuario, apiKey, createdAt, lastUsed }: IApiKey) => ({
+            name: usuario as string,
+            prefix: (apiKey as string).substring(0, 12) + '...', // Mostra apenas os primeiros 12 caracteres
             createdAt: createdAt as string,
             lastUsed: lastUsed as string | null
         }));
