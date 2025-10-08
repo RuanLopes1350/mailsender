@@ -25,7 +25,7 @@ app.use(requestLogger);
 app.use('/painel', express.static(path.resolve('public')));
 
 // Health Check
-app.get('/', (_req, res) =>
+app.get('/api', (_req, res) =>
   res.json({ ok: true, message: 'Micro-serviço online' })
 );
 

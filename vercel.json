@@ -8,19 +8,16 @@
   ],
   "routes": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(styles\\.css|script\\.js)",
-      "dest": "/public/$1"
+      "src": "/api/(.*)",
+      "dest": "src/api/api.ts"
     },
     {
       "src": "/painel",
-      "dest": "/public/index.html"
+      "dest": "public/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/src/api/api.ts"
+      "dest": "/public/$1"
     }
   ]
 }

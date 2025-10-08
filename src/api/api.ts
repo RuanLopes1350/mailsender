@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import path from 'path';
 import dotenv from 'dotenv';
 import { apiKeyMiddleware } from '../auth/apiKeyMiddleware.js';
 import { requestLogger, RequestWithUser } from '../middleware/requestLogger.js';
@@ -15,8 +16,11 @@ app.use(express.json());
 // Middleware de log de requisições
 app.use(requestLogger);
 
+// Painel de administração (arquivos estáticos)
+app.use('/painel', express.static(path.resolve('public')));
+
 // Health Check
-app.get('/', (_req: Request, res: Response) =>
+app.get('/api', (_req: Request, res: Response) =>
   res.json({ ok: true, message: 'Micro-serviço online (Vercel)' })
 );
 

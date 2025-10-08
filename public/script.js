@@ -1,5 +1,5 @@
 // Configuração da API
-const API_BASE = window.location.origin;
+const API_BASE = window.location.origin + '/api';
 
 // Gerenciamento de Tabs
 document.querySelectorAll('.tab-button').forEach(button => {
