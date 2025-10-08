@@ -21,7 +21,12 @@ document.querySelectorAll('.tab-button').forEach(button => {
 
 // Carrega dados ao iniciar
 window.addEventListener('DOMContentLoaded', () => {
-    loadTabData('dashboard');
+    console.log('🎬 DOM carregado, aguardando 100ms...');
+    // Aguarda um pouco para garantir que tudo está renderizado
+    setTimeout(() => {
+        console.log('✅ Iniciando carregamento do dashboard...');
+        loadTabData('dashboard');
+    }, 100);
 });
 
 // Carrega dados específicos de cada tab
@@ -42,11 +47,21 @@ function loadTabData(tabName) {
 // ==================== DASHBOARD ====================
 
 async function loadDashboardData() {
+    console.log('🔄 Carregando dashboard...');
+    console.log('📍 API_BASE:', API_BASE);
+    console.log('📡 Chamando:', `${API_BASE}/stats`);
+    
     try {
         const response = await fetch(`${API_BASE}/stats`);
-        if (!response.ok) throw new Error('Erro ao carregar estatísticas');
+        console.log('📥 Response status:', response.status);
+        
+        if (!response.ok) {
+            console.error('❌ Response não OK:', response.status, response.statusText);
+            throw new Error('Erro ao carregar estatísticas');
+        }
         
         const data = await response.json();
+        console.log('✅ Dados recebidos:', data);
         
         // Atualiza contadores
         document.getElementById('totalEmails').textContent = data.emails?.total || 0;
@@ -56,10 +71,11 @@ async function loadDashboardData() {
         
         // Atualiza tabela de emails recentes
         const tbody = document.getElementById('recentEmailsBody');
+        console.log('📧 Recent emails recebidos:', data.recentEmails); // DEBUG
         if (data.recentEmails && data.recentEmails.length > 0) {
             tbody.innerHTML = data.recentEmails.map(email => `
                 <tr>
-                    <td>${formatDate(email.timestamp)}</td>
+                    <td>${formatDate(email.createdAt)}</td>
                     <td>${email.to}</td>
                     <td>${email.subject}</td>
                     <td><code>${email.template}</code></td>
@@ -67,6 +83,7 @@ async function loadDashboardData() {
                 </tr>
             `).join('');
         } else {
+            console.log('⚠️ Nenhum email recente encontrado'); // DEBUG
             tbody.innerHTML = '<tr><td colspan="5" class="loading">Nenhum email enviado ainda</td></tr>';
         }
     } catch (error) {

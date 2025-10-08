@@ -28,19 +28,19 @@ app.use('/painel', express.static(path.resolve('public')));
 app.use(express.static(path.resolve('public'))); 
 
 // Health Check
+// Rotas com prefixo /api (compatibilidade com Vercel)
 app.get('/api', (_req, res) =>
   res.json({ ok: true, message: 'Micro-serviço online' })
 );
 
-app.get('/status', (_req, res) => {
+app.get('/api/status', (_req, res) => {
   res.json({
     ok: true,
     startTime: serverStartTime
   });
 });
 
-// Rota para estatísticas do dashboard
-app.get('/stats', async (_req, res) => {
+app.get('/api/stats', async (_req, res) => {
   try {
     const [emailStats, requestStats, recentEmails, recentActivity] = await Promise.all([
       getEmailStats(),
@@ -61,7 +61,7 @@ app.get('/stats', async (_req, res) => {
   }
 });
 
-app.post('/keys/generate', async (req, res) => {
+app.post('/api/keys/generate', async (req, res) => {
   try {
     const { name = 'semNome' } = req.body ?? {};
     const apiKey = await gerarApiKey(name);
@@ -76,8 +76,7 @@ app.post('/keys/generate', async (req, res) => {
   }
 });
 
-// Chaves API
-app.get('/keys', async (_req, res) => {
+app.get('/api/keys', async (_req, res) => {
   try {
     const keys = await listarApiKeys();
     res.json(keys);
@@ -87,9 +86,13 @@ app.get('/keys', async (_req, res) => {
   }
 });
 
-app.delete('/keys/:name', async (req, res) => {
+app.delete('/api/keys/:name', async (req, res) => {
   try {
-    const ok = await revogarApiKey(req.params.name);
+    const { name } = req.params;
+    if (!name) {
+      return res.status(400).json({ message: 'Nome da chave não fornecido' });
+    }
+    const ok = await revogarApiKey(name);
     if (ok) {
       return res.status(204).end();
     } else {
@@ -101,8 +104,7 @@ app.delete('/keys/:name', async (req, res) => {
   }
 });
 
-// Envio dos emails
-app.post('/emails/send', apiKeyMiddleware, async (req: RequestWithUser, res) => {
+app.post('/api/emails/send', apiKeyMiddleware, async (req: RequestWithUser, res) => {
   let emailId: string | null = null;
 
   try {
@@ -111,7 +113,6 @@ app.post('/emails/send', apiKeyMiddleware, async (req: RequestWithUser, res) => 
       ano: new Date().getFullYear(),
     };
 
-    // Log do email antes de enviar
     if (req.apiKeyUser) {
       emailId = await logEmail({
         to: req.body.to,
@@ -124,7 +125,6 @@ app.post('/emails/send', apiKeyMiddleware, async (req: RequestWithUser, res) => 
 
     const info = await sendMail({ ...req.body, data: emailData });
 
-    // Atualiza status para sucesso
     if (emailId) {
       await updateEmailStatus(emailId, 'sent');
     }
@@ -133,7 +133,6 @@ app.post('/emails/send', apiKeyMiddleware, async (req: RequestWithUser, res) => 
   } catch (err) {
     console.error(err);
 
-    // Atualiza status para erro
     if (emailId) {
       await updateEmailStatus(emailId, 'failed', (err as Error).message);
     }
