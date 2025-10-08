@@ -8,11 +8,11 @@
   ],
   "routes": [
     {
-      "src": "/(styles\\.css|script\\.js)",
-      "dest": "/public/$1"
+      "handle": "filesystem"
     },
     {
-      "handle": "filesystem"
+      "src": "/(styles\\.css|script\\.js)",
+      "dest": "/public/$1"
     },
     {
       "src": "/painel",
