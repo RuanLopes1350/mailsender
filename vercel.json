@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/api/api.ts",
+      "src": "dist/api/api.js",
       "use": "@vercel/node"
     },
     {
@@ -21,7 +21,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/src/api/api.ts"
+      "dest": "/dist/api/api.js"
     }
   ],
   "env": {
