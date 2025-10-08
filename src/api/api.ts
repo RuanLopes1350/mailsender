@@ -16,9 +16,6 @@ app.use(express.json());
 // Middleware de log de requisições
 app.use(requestLogger);
 
-// Painel de administração (arquivos estáticos)
-app.use('/painel', express.static(path.resolve('public')));
-
 // Health Check
 app.get('/api', (_req: Request, res: Response) =>
   res.json({ ok: true, message: 'Micro-serviço online (Vercel)' })
