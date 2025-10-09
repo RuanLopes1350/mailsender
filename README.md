@@ -174,7 +174,7 @@ MASTER_KEY=sua-chave-mestra-secreta
 
 ### 4️⃣ Configure o Gmail App Password
 
-1. Acesse [Google Account Security](https://myaccount.google.com/security)
+1. Acesse [Google Account Security App Passwords](http://myaccount.google.com/apppasswords)
 2. Ative a **Verificação em 2 etapas**
 3. Vá em **Senhas de app**
 4. Selecione "Outro" e dê um nome (ex: "Mail Sender")
