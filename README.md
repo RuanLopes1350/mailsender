@@ -160,13 +160,13 @@ PORT=5015
 NODE_ENV=development
 
 # MongoDB
-MONGODB_URI=mongodb://localhost:27017/mailsender
+MONGO_URI=mongodb://localhost:27017/mailsender
 # Ou MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/mailsender
+# MONGO_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/mailsender
 
 # Email (Gmail)
 SENDER_EMAIL=seu-email@gmail.com
-SENDER_PASSWORD=sua-app-password-aqui
+APP_PASSWORD=sua-app-password-aqui
 
 # Segurança
 MASTER_KEY=sua-chave-mestra-secreta
