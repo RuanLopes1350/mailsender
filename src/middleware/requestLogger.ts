@@ -7,10 +7,21 @@ export interface RequestWithUser extends Request {
 
 export function requestLogger(req: RequestWithUser, res: Response, next: NextFunction) {
     const startTime = Date.now();
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    console.log(`\n🔵 [${requestId}] Nova requisição recebida`);
+    console.log(`   Método: ${req.method}`);
+    console.log(`   Path: ${req.path}`);
+    console.log(`   IP: ${req.ip || req.connection.remoteAddress || 'unknown'}`);
+    console.log(`   User-Agent: ${req.get('User-Agent') || 'N/A'}`);
 
     // Intercepta o final da resposta para capturar o status
     res.on('finish', async () => {
         const responseTime = Date.now() - startTime;
+        
+        console.log(`\n✅ [${requestId}] Requisição finalizada`);
+        console.log(`   Status: ${res.statusCode}`);
+        console.log(`   Tempo de resposta: ${responseTime}ms`);
 
         try {
             await logRequest({

@@ -18,6 +18,7 @@ export async function logEmail(emailData: {
     data: Record<string, any>;
     apiKeyUser: string;
 }): Promise<string> {
+    console.log(`   📝 Preparando registro do email...`);
     await initEmailModel();
 
     const email: Omit<IEmail, '_id'> = {
@@ -27,8 +28,12 @@ export async function logEmail(emailData: {
         updatedAt: new Date().toISOString()
     };
 
+    console.log(`   💽 Salvando no MongoDB...`);
     const result = await emailModel.create(email);
-    return result._id!.toString();
+    const emailId = result._id!.toString();
+    console.log(`   ✓ Registro criado com sucesso (ID: ${emailId})`);
+    
+    return emailId;
 }
 
 export async function updateEmailStatus(
@@ -36,10 +41,19 @@ export async function updateEmailStatus(
     status: IEmail['status'],
     error?: string
 ): Promise<boolean> {
+    console.log(`   📊 Atualizando status do email ${emailId} para '${status}'...`);
     await initEmailModel();
 
     const sentAt = status === 'sent' ? new Date().toISOString() : undefined;
-    return await emailModel.updateStatus(emailId, status, error, sentAt);
+    const result = await emailModel.updateStatus(emailId, status, error, sentAt);
+    
+    if (result) {
+        console.log(`   ✓ Status atualizado no banco de dados`);
+    } else {
+        console.log(`   ⚠️ Falha ao atualizar status no banco`);
+    }
+    
+    return result;
 }
 
 export async function getEmailStats() {
