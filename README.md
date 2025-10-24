@@ -648,12 +648,14 @@ mailsender-ts/
 │   ├── styles.css              # Estilos do painel
 │   └── script.js               # Lógica do painel
 ├── .env                        # Variáveis de ambiente
-├── .vercelignore              # Arquivos ignorados no deploy
+├── .vercelignore               # Arquivos ignorados no deploy
 ├── vercel.json                 # Configuração Vercel
 ├── package.json                # Dependências
 ├── tsconfig.json               # Configuração TypeScript
 ├── TUTORIAL.md                 # Tutorial completo de uso
-└── README.md                   # Este arquivo
+├── README.md                   # Este arquivo
+├── docker-compose.yml          # Script YAML para docker
+└── dockerfile                  # Instruções para o docker
 ```
 
 ---
