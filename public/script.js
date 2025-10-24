@@ -110,7 +110,7 @@ async function loadApiKeys() {
                     <td>${formatDate(key.createdAt)}</td>
                     <td>
                         <button class="btn btn-danger btn-small" onclick="revokeApiKey('${key.name}')">
-                            🗑️ Revogar
+                            🗑️ Deletar
                         </button>
                     </td>
                 </tr>
@@ -166,7 +166,7 @@ async function generateApiKey() {
 }
 
 async function revokeApiKey(name) {
-    if (!confirm(`Tem certeza que deseja revogar a chave "${name}"? Esta ação não pode ser desfeita.`)) {
+    if (!confirm(`Tem certeza que deseja DELETAR PERMANENTEMENTE a chave "${name}"? Esta ação não pode ser desfeita e a chave será removida do banco de dados.`)) {
         return;
     }
     
@@ -176,14 +176,14 @@ async function revokeApiKey(name) {
         });
         
         if (response.ok) {
-            alert('Chave revogada com sucesso');
+            alert('Chave deletada com sucesso');
             loadApiKeys();
         } else {
-            throw new Error('Erro ao revogar chave');
+            throw new Error('Erro ao deletar chave');
         }
     } catch (error) {
-        console.error('Erro ao revogar chave:', error);
-        alert('Erro ao revogar chave');
+        console.error('Erro ao deletar chave:', error);
+        alert('Erro ao deletar chave');
     }
 }
 

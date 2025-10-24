@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { apiKeyMiddleware } from './auth/apiKeyMiddleware.js';
 import { requestLogger, RequestWithUser } from './middleware/requestLogger.js';
 import { sendMail } from './mail/index.js';
-import { gerarApiKey, listarApiKeys, revogarApiKey, inicializarSistemaApiKeys } from './auth/apiKey.js';
+import { gerarApiKey, listarApiKeys, revogarApiKey, inicializarSistemaApiKeys, removerApiKey } from './auth/apiKey.js';
 import { logEmail, updateEmailStatus, getEmailStats, getRecentEmails } from './services/emailService.js';
 import { getRequestStats, getRecentActivity } from './services/requestService.js';
 
@@ -106,7 +106,7 @@ app.delete('/api/keys/:name', async (req, res) => {
       return res.status(400).json({ message: 'Nome da chave não fornecido' });
     }
     
-    const ok = await revogarApiKey(name);
+    const ok = await removerApiKey(name);
     if (ok) {
       console.log(`   ✅ Chave revogada com sucesso`);
       return res.status(204).end();
