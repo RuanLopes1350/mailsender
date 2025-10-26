@@ -198,7 +198,7 @@ Planejo refazer completamente essa interface usando React e TailwindCSS (RF080) 
 
 # **DIAGRAMA DE CASOS DE USO**
 
-![Mail Sender - Casos de Uso]()
+![Mail Sender - Casos de Uso](img/Mail_Sender_-_Casos_de_Uso.png)
 
 ## **DESCRIÇÃO TEXTUAL DOS CASOS DE USO**
 
@@ -253,16 +253,16 @@ Planejo refazer completamente essa interface usando React e TailwindCSS (RF080) 
 
 # **DIAGRAMA DE CLASSES**
 
-![Mail Sender - Atividade Envio de Email](/img/Mail_Sender_-_Atividade_Envio_de_Email.png)
+![Mail Sender - Atividade Envio de Email](img/Mail_Sender_-_Atividade_Envio_de_Email.png)
 
 # **DIAGRAMA DE SEQUÊNCIAS**
 
-![Mail Sender - Sequência Cadastro](/img/Mail_Sender_-_Sequencia_Cadastro.png)
-![Mail Sender - Sequência Envio de email](/img/Mail_Sender_-_Sequencia_Envio_de_email.png)
-![Mail Sender - Sequência Aprovação API Key](/img/Mail_Sender_-_Sequencia_Aprovacao_API_Key.png)
-![Mail Sender - Sequência Revogação API Key](/img/Mail_Sender_-_Sequencia_Revogacao_API_Key.png)
-![Mail Sender - Sequência Inativar-Reativar API Key](/img/Mail_Sender_-_Sequencia_Inativar-Reativar_API_Key.png)
+![Mail Sender - Sequência Cadastro](img/Mail_Sender_-_Sequencia_Cadastro.png)
+![Mail Sender - Sequência Envio de email](img/Mail_Sender_-_Sequencia_Envio_de_email.png)
+![Mail Sender - Sequência Aprovação API Key](img/Mail_Sender_-_Sequencia_Aprovacao_API_Key.png)
+![Mail Sender - Sequência Revogação API Key](img/Mail_Sender_-_Sequencia_Revogacao_API_Key.png)
+![Mail Sender - Sequência Inativar-Reativar API Key](img/Mail_Sender_-_Sequencia_Inativar-Reativar_API_Key.png)
 
 # **DIAGRAMA DE ATIVIDADES**
 
-![Mail Sender - Atividade Envio de Email](/img/Mail_Sender_-_Atividade_Envio_de_Email.png)
+![Mail Sender - Atividade Envio de Email](img/Mail_Sender_-_Atividade_Envio_de_Email.png)
