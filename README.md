@@ -11,7 +11,7 @@
 
 **Microserviço profissional para envio de emails com templates personalizáveis, painel administrativo completo e autenticação por API Keys.**
 
-[🚀 Ver Demo](https://mailsender-one.vercel.app/painel) • [📖 Tutorial](TUTORIAL.md) • [🐛 Reportar Bug](https://github.com/RuanLopes1350/mailsender-ts/issues)
+[🚀 Ver Demo](https://mailsender-one.vercel.app/painel) • [📖 Tutorial](TUTORIAL.md) • [🐛 Reportar Bug](https://github.com/RuanLopes1350/mailsender-ts/issues) • [📄 Documentação](PROJETO.md)
 
 </div>
 
