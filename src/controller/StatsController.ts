@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { RequestWithUser } from '../middleware/apiKeyMiddleware.js';
-import RequestService from '../service/RequestService.js';
-import EmailService from '../service/EmailService.js';
+import RequestService from '../service/requestService.js';
+import EmailService from '../service/emailService.js';
 
 // Controller responsável por gerenciar estatísticas e status do sistema
 class StatsController {

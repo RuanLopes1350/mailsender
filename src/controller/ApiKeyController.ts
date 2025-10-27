@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { RequestWithUser } from '../middleware/apiKeyMiddleware.js';
-import ApiKeyService from '../service/ApiKeyService.js';
+import ApiKeyService from '../service/apiKeyService.js';
 
 // Controller responsável por gerenciar as requisições relacionadas às API Keys
 class ApiKeyController {

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import ApiKeyService from '../service/ApiKeyService.js';
+import ApiKeyService from '../service/apiKeyService.js';
 
 // Interface estendida do Request para incluir o usuário da API Key
 export interface RequestWithUser extends Request {

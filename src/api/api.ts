@@ -3,9 +3,9 @@ import dotenv from 'dotenv';
 import DbConnect from '../config/DbConnect.js';
 import { requestLoggerMiddleware } from '../middleware/requestLoggerMiddleware.js';
 import { apiKeyMiddleware } from '../middleware/apiKeyMiddleware.js';
-import ApiKeyController from '../controller/ApiKeyController.js';
-import EmailController from '../controller/EmailController.js';
-import StatsController from '../controller/StatsController.js';
+import ApiKeyController from '../controller/apiKeyController.js';
+import EmailController from '../controller/emailController.js';
+import StatsController from '../controller/statsController.js';
 
 // Carrega variáveis de ambiente
 dotenv.config();

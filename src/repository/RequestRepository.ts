@@ -1,4 +1,4 @@
-import RequestModel, { IRequest } from '../models/Request.js';
+import RequestModel, { IRequest } from '../models/request.js';
 
 // Repositório responsável por todas as operações de Logs de Requisições no banco de dados
 class RequestRepository {

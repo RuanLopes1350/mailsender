@@ -1,5 +1,5 @@
-import RequestRepository from '../repository/RequestRepository.js';
-import { IRequest } from '../models/Request.js';
+import RequestRepository from '../repository/requestRepository.js'
+import { IRequest } from '../models/request.js';
 
 // Service responsável pelas regras de negócio relacionadas aos logs de requisições
 class RequestService {
