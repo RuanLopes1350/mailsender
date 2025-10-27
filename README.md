@@ -273,7 +273,7 @@ curl -X POST http://localhost:5015/keys/generate \
 ### Passo 2: Enviar um Email
 
 ```bash
-curl -X POST http://localhost:5015/emails/send \
+curl -X POST http://localhost:5015/api/emails/send \
   -H "Content-Type: application/json" \
   -H "x-api-key: SUA_API_KEY" \
   -d '{
@@ -294,7 +294,7 @@ curl -X POST http://localhost:5015/emails/send \
 
 **JavaScript/Node.js:**
 ```javascript
-const response = await fetch('http://localhost:5015/emails/send', {
+const response = await fetch('http://localhost:5015/api/emails/send', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -322,7 +322,7 @@ console.log(result);
 ```python
 import requests
 
-response = requests.post('http://localhost:5015/emails/send',
+response = requests.post('http://localhost:5015/api/emails/send',
   headers={
     'Content-Type': 'application/json',
     'x-api-key': 'SUA_API_KEY'
@@ -511,7 +511,7 @@ NODE_ENV=production
 
 **Local:**
 ```
-http://localhost:5015/emails/send
+http://localhost:5015/api/emails/send
 ```
 
 **Vercel:**
@@ -542,7 +542,7 @@ x-api-key: SUA_API_KEY
 | `POST` | `/keys/generate` | ❌ | Gerar API Key |
 | `GET` | `/keys` | ❌ | Listar chaves |
 | `DELETE` | `/keys/:name` | ❌ | Revogar chave |
-| `POST` | `/emails/send` | ✅ | Enviar email |
+| `POST` | `/api/emails/send` | ✅ | Enviar email |
 
 ### Exemplos de Requisição
 
@@ -560,7 +560,7 @@ curl -X POST http://localhost:5015/keys/generate \
 
 **Enviar Email:**
 ```bash
-curl -X POST http://localhost:5015/emails/send \
+curl -X POST http://localhost:5015/api/emails/send \
   -H "Content-Type: application/json" \
   -H "x-api-key: SUA_API_KEY" \
   -d '{

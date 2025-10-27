@@ -46,7 +46,7 @@ curl -X POST http://localhost:5015/keys/generate \
 
 ### Endpoint Principal
 ```
-POST /emails/send
+POST /api/emails/send
 ```
 
 ### Headers Obrigatórios
@@ -330,7 +330,7 @@ Template versátil para notificações, confirmações, alertas, etc.
 
 ```javascript
 async function enviarEmail() {
-  const response = await fetch('http://localhost:5015/emails/send', {
+  const response = await fetch('http://localhost:5015/api/emails/send', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -364,7 +364,7 @@ const axios = require('axios');
 
 async function enviarEmail() {
   try {
-    const response = await axios.post('http://localhost:5015/emails/send', {
+    const response = await axios.post('http://localhost:5015/api/emails/send', {
       to: 'usuario@exemplo.com',
       subject: 'Pedido Confirmado',
       template: 'generico',
@@ -397,7 +397,7 @@ async function enviarEmail() {
 import requests
 
 def enviar_email():
-    url = 'http://localhost:5015/emails/send'
+    url = 'http://localhost:5015/api/emails/send'
     headers = {
         'Content-Type': 'application/json',
         'x-api-key': 'SUA_API_KEY_AQUI'
@@ -429,7 +429,7 @@ enviar_email()
 <?php
 
 function enviarEmail() {
-    $url = 'http://localhost:5015/emails/send';
+    $url = 'http://localhost:5015/api/emails/send';
     $data = [
         'to' => 'usuario@exemplo.com',
         'subject' => 'Bem-vindo!',
