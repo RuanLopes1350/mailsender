@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { RequestWithUser } from '../middleware/apiKeyMiddleware.js';
-import EmailService from '../service/EmailService.js';
-import EmailSenderService from '../service/EmailSenderService.js';
+import EmailService from '../service/emailService.js';
+import EmailSenderService from '../service/emailSenderService.js';
 
 // Controller responsável por gerenciar as requisições relacionadas aos Emails
 class EmailController {

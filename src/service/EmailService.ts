@@ -1,4 +1,4 @@
-import EmailRepository from '../repository/EmailRepository.js';
+import EmailRepository from '../repository/emailRepository.js';
 import { IEmail } from '../models/email.js';
 
 // Service responsável pelas regras de negócio relacionadas aos Emails

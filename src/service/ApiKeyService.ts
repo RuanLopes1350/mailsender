@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import ApiKeyRepository from '../repository/ApiKeyRepository.js';
+import ApiKeyRepository from '../repository/apiKeyRepository.js';
 
 const SALT_ROUNDS = 15;
 
