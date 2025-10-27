@@ -1,81 +1,43 @@
-import { Collection, ObjectId } from 'mongodb';
-import DatabaseConnection from '../config/database.js';
+import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IApiKey {
-    _id?: ObjectId;
+// Interface que representa uma API Key no sistema
+export interface IApiKey extends Document {
     usuario: string;
     apiKey: string;
-    createdAt: string;
-    lastUsed: string | null;
+    createdAt: Date;
+    lastUsed: Date | null;
     isActive: boolean;
 }
 
-export class ApiKeyModel {
-    private collection: Collection<IApiKey>;
-
-    constructor() {
-        const db = DatabaseConnection.getInstance().getDb();
-        this.collection = db.collection<IApiKey>('apiKeys');
-
-        // Cria índices para otimizar consultas
-        this.createIndexes();
+// Schema do Mongoose para API Keys
+const apiKeySchema = new Schema<IApiKey>({
+    usuario: { 
+        type: String, 
+        required: true, 
+        unique: true,
+        index: true 
+    },
+    apiKey: { 
+        type: String, 
+        required: true,
+        index: true 
+    },
+    createdAt: { 
+        type: Date, 
+        default: Date.now 
+    },
+    lastUsed: { 
+        type: Date, 
+        default: null 
+    },
+    isActive: { 
+        type: Boolean, 
+        default: true,
+        index: true 
     }
+});
 
-    private async createIndexes() {
-        try {
-            // Índice único para o usuário
-            await this.collection.createIndex({ usuario: 1 }, { unique: true });
-            // Índice para apiKey para buscas rápidas
-            await this.collection.createIndex({ apiKey: 1 });
-            // Índice para chaves ativas
-            await this.collection.createIndex({ isActive: 1 });
-        } catch (error) {
-            console.log('Índices já existem ou erro ao criar:', error);
-        }
-    }
-
-    async create(apiKeyData: Omit<IApiKey, '_id'>): Promise<IApiKey> {
-        const result = await this.collection.insertOne(apiKeyData);
-        return { ...apiKeyData, _id: result.insertedId };
-    }
-
-    async findByUser(usuario: string): Promise<IApiKey | null> {
-        return await this.collection.findOne({ usuario, isActive: true });
-    }
-
-    async findByApiKey(apiKey: string): Promise<IApiKey | null> {
-        return await this.collection.findOne({ apiKey, isActive: true });
-    }
-
-    async findAll(): Promise<IApiKey[]> {
-        return await this.collection.find({ isActive: true }).toArray();
-    }
-
-    async updateLastUsed(usuario: string): Promise<boolean> {
-        const result = await this.collection.updateOne(
-            { usuario, isActive: true },
-            { $set: { lastUsed: new Date().toISOString() } }
-        );
-        return result.modifiedCount > 0;
-    }
-
-    async deactivate(usuario: string): Promise<boolean> {
-        const result = await this.collection.updateOne(
-            { usuario, isActive: true },
-            { $set: { isActive: false } }
-        );
-        return result.modifiedCount > 0;
-    }
-
-    async deleteByUser(usuario: string): Promise<boolean> {
-        const result = await this.collection.deleteOne({ usuario });
-        return result.deletedCount > 0;
-    }
-
-    async exists(usuario: string): Promise<boolean> {
-        const count = await this.collection.countDocuments({ usuario, isActive: true });
-        return count > 0;
-    }
-}
+// Model do Mongoose
+const ApiKeyModel = mongoose.model<IApiKey>('ApiKey', apiKeySchema);
 
 export default ApiKeyModel;

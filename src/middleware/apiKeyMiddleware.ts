@@ -1,8 +1,19 @@
-import { validarApiKey, obterUsuarioPorApiKey } from "./apiKey.js";
-import { RequestWithUser } from "../middleware/requestLogger.js";
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import ApiKeyService from '../service/apiKeyService.js';
 
-export async function apiKeyMiddleware(req: RequestWithUser, res: Response, next: NextFunction): Promise<void> {
+// Interface estendida do Request para incluir o usuário da API Key
+export interface RequestWithUser extends Request {
+    apiKeyUser?: string;
+}
+
+const apiKeyService = new ApiKeyService();
+
+// Middleware para validar API Key nas requisições
+export async function apiKeyMiddleware(
+    req: RequestWithUser, 
+    res: Response, 
+    next: NextFunction
+): Promise<void> {
     console.log(`\n🔐 Validando API Key...`);
     
     const apiKey = req.headers['x-api-key'] || req.query.apiKey;
@@ -15,7 +26,8 @@ export async function apiKeyMiddleware(req: RequestWithUser, res: Response, next
 
     console.log(`   🔑 API Key recebida: ${(apiKey as string).substring(0, 8)}...`);
 
-    const valido = await validarApiKey(apiKey as string);
+    const valido = await apiKeyService.validarApiKey(apiKey as string);
+    
     if (!valido) {
         console.log(`   ❌ API Key inválida`);
         res.status(403).json({ message: 'API key inválida' });
@@ -26,7 +38,7 @@ export async function apiKeyMiddleware(req: RequestWithUser, res: Response, next
 
     // Adiciona o usuário da API key na requisição
     try {
-        const usuario = await obterUsuarioPorApiKey(apiKey as string);
+        const usuario = await apiKeyService.obterUsuarioPorApiKey(apiKey as string);
         if (usuario) {
             req.apiKeyUser = usuario;
             console.log(`   👤 Usuário identificado: ${usuario}`);
