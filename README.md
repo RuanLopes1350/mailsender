@@ -157,7 +157,6 @@ Crie um arquivo `.env` na raiz do projeto:
 ```env
 # Servidor
 PORT=5015
-NODE_ENV=development
 
 # MongoDB
 MONGO_URI=mongodb://localhost:27017/mailsender
@@ -166,7 +165,7 @@ MONGO_URI=mongodb://localhost:27017/mailsender
 
 # Email (Gmail)
 SENDER_EMAIL=seu-email@gmail.com
-APP_PASSWORD=sua-app-password-aqui
+SENDER_PASSWORD=sua-senha-ou-app-password
 
 # Segurança
 MASTER_KEY=sua-chave-mestra-secreta
