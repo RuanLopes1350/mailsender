@@ -63,15 +63,15 @@ async function loadDashboardData() {
         const data = await response.json();
         console.log('✅ Dados recebidos:', data);
         
-        // Atualiza contadores
+        // Atualiza contadores - ajustado para nova API
         document.getElementById('totalEmails').textContent = data.emails?.total || 0;
-        document.getElementById('successEmails').textContent = data.emails?.sent || 0;
-        document.getElementById('failedEmails').textContent = data.emails?.failed || 0;
+        document.getElementById('successEmails').textContent = data.emails?.enviados || 0;
+        document.getElementById('failedEmails').textContent = data.emails?.falhas || 0;
         document.getElementById('totalRequests').textContent = data.requests?.total || 0;
         
         // Atualiza tabela de emails recentes
         const tbody = document.getElementById('recentEmailsBody');
-        console.log('📧 Recent emails recebidos:', data.recentEmails); // DEBUG
+        console.log('📧 Recent emails recebidos:', data.recentEmails);
         if (data.recentEmails && data.recentEmails.length > 0) {
             tbody.innerHTML = data.recentEmails.map(email => `
                 <tr>
@@ -83,7 +83,7 @@ async function loadDashboardData() {
                 </tr>
             `).join('');
         } else {
-            console.log('⚠️ Nenhum email recente encontrado'); // DEBUG
+            console.log('⚠️ Nenhum email recente encontrado');
             tbody.innerHTML = '<tr><td colspan="5" class="loading">Nenhum email enviado ainda</td></tr>';
         }
     } catch (error) {
@@ -105,11 +105,11 @@ async function loadApiKeys() {
         if (keys && keys.length > 0) {
             tbody.innerHTML = keys.map(key => `
                 <tr>
-                    <td><strong>${key.name}</strong></td>
-                    <td><code>${key.prefix || 'N/A'}</code></td>
-                    <td>${formatDate(key.createdAt)}</td>
+                    <td><strong>${key.nome}</strong></td>
+                    <td><code>${key.prefixo || 'N/A'}</code></td>
+                    <td>${formatDate(key.criadoEm)}</td>
                     <td>
-                        <button class="btn btn-danger btn-small" onclick="revokeApiKey('${key.name}')">
+                        <button class="btn btn-danger btn-small" onclick="revokeApiKey('${key.nome}')">
                             🗑️ Deletar
                         </button>
                     </td>
@@ -270,9 +270,9 @@ async function loadActivityLogs() {
         if (data.recentActivity && data.recentActivity.length > 0) {
             tbody.innerHTML = data.recentActivity.map(activity => `
                 <tr>
-                    <td>${formatDate(activity.timestamp)}</td>
+                    <td>${formatDate(activity.createdAt)}</td>
                     <td><code>${activity.method}</code></td>
-                    <td><code>${activity.endpoint}</code></td>
+                    <td><code>${activity.path}</code></td>
                     <td><span class="status status-${getStatusClass(activity.statusCode)}">${activity.statusCode}</span></td>
                     <td>${activity.apiKeyUser || 'N/A'}</td>
                 </tr>
