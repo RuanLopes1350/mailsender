@@ -13,9 +13,9 @@ services:
       # É recomendado usar um arquivo .env para dados sensíveis
       NODE_ENV: production
       PORT: 5015 # Garante que a porta no container é a mesma exposta
-      MONGO_URI: ${MONGO_URI} # Pega do arquivo .env
+      DB_URL: ${DB_URL} # Pega do arquivo .env
       SENDER_EMAIL: ${SENDER_EMAIL} # Pega do arquivo .env
-      APP_PASSWORD: ${APP_PASSWORD} # Pega do arquivo .env
+      SENDER_PASSWORD: ${SENDER_PASSWORD} # Pega do arquivo .env
       MASTER_KEY: ${MASTER_KEY} # Pega do arquivo .env
     # Você pode descomentar a linha abaixo se quiser usar um arquivo .env específico
     # env_file:

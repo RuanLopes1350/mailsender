@@ -159,9 +159,9 @@ Crie um arquivo `.env` na raiz do projeto:
 PORT=5015
 
 # MongoDB
-MONGO_URI=mongodb://localhost:27017/mailsender
+DB_URL=mongodb://localhost:27017/mailsender
 # Ou MongoDB Atlas:
-# MONGO_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/mailsender
+# DB_URL=mongodb+srv://usuario:senha@cluster.mongodb.net/mailsender
 
 # Email (Gmail)
 SENDER_EMAIL=seu-email@gmail.com
@@ -216,7 +216,7 @@ http://localhost:5015/painel
 mongod
 
 # Use no .env:
-MONGODB_URI=mongodb://localhost:27017/mailsender
+DB_URL=mongodb://localhost:27017/mailsender
 ```
 
 **Opção 2: MongoDB Atlas (Cloud - Grátis)**
