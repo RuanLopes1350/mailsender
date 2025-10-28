@@ -1,43 +1,79 @@
-# 1. Imagem base do Node.js
-FROM node:18-alpine AS builder
+# ==============================================================================
+# ESTÁGIO 1: Builder - Compilação do TypeScript
+# ==============================================================================
+FROM node:20-alpine AS builder
 
-# 2. Define o diretório de trabalho dentro do container
+# Instala dependências do sistema necessárias para compilação
+RUN apk add --no-cache python3 make g++
+
+# Define o diretório de trabalho
 WORKDIR /app
 
-# 3. Copia os arquivos de dependência
-COPY package.json package-lock.json ./
+# Copia apenas os arquivos de dependências primeiro (cache layer)
+COPY package*.json ./
 
-# 4. Instala as dependências de produção
-RUN npm ci --only=production
+# Instala TODAS as dependências (incluindo devDependencies para build)
+RUN npm ci
 
-# 5. Copia o restante do código fonte
+# Copia o código fonte
 COPY . .
 
-# 6. Compila o TypeScript para JavaScript
+# Compila o TypeScript para JavaScript
 RUN npm run build
 
-# --- Estágio de Produção ---
-FROM node:18-alpine
+# Remove devDependencies após build
+RUN npm prune --production
 
+# ==============================================================================
+# ESTÁGIO 2: Produção - Imagem final otimizada
+# ==============================================================================
+FROM node:20-alpine
+
+# Adiciona metadados à imagem
+LABEL maintainer="ruanlopes1350@gmail.com"
+LABEL description="Mail Sender Microservice"
+LABEL version="2.0.0"
+
+# Instala apenas dumb-init para gerenciamento de processos
+RUN apk add --no-cache dumb-init
+
+# Cria usuário não-root para executar a aplicação (segurança)
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Define o diretório de trabalho
 WORKDIR /app
 
-# Copia as dependências de produção do estágio anterior
-COPY --from=builder /app/node_modules ./node_modules
+# Copia as dependências de produção do estágio de build
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 
-# Copia os arquivos compilados (dist) do estágio anterior
-COPY --from=builder /app/dist ./dist
+# Copia os arquivos compilados
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 
-# Copia os templates MJML e a pasta public
-COPY src/mail/templates ./src/mail/templates
-COPY public ./public
+# Copia os templates MJML e arquivos estáticos
+COPY --chown=nodejs:nodejs src/mail/templates ./src/mail/templates
+COPY --chown=nodejs:nodejs public ./public
 
-# 7. Expõe a porta que a aplicação usa (definida no .env ou padrão 5015/3010)
-# Vamos usar 5015 como padrão, ajuste se necessário
-EXPOSE 5015
+# Copia o package.json (necessário para metadados)
+COPY --chown=nodejs:nodejs package.json ./
 
-# 8. Define variáveis de ambiente padrão (podem ser sobrescritas no `docker run`)
-ENV NODE_ENV=production
-ENV PORT=5015
+# Muda para o usuário não-root
+USER nodejs
 
-# 9. Comando para iniciar a aplicação quando o container iniciar
+# Expõe a porta da aplicação
+EXPOSE 5016
+
+# Define variáveis de ambiente padrão
+ENV NODE_ENV=production \
+    PORT=5016 \
+    NODE_OPTIONS="--max-old-space-size=512"
+
+# Healthcheck para verificar se o container está saudável
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:5016/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Usa dumb-init para gerenciar sinais corretamente
+ENTRYPOINT ["dumb-init", "--"]
+
+# Comando para iniciar a aplicação
 CMD ["node", "dist/server.js"]

@@ -1,22 +1,72 @@
-version: '3.8' # Define a versão do Docker Compose
+version: '3.8'
 
 services:
   mailsender:
     image: ruanlopes1350/mailsender:latest
     container_name: mailsender_app
-    restart: always # Reinicia o container se ele parar
+
+    # Política de restart - reinicia apenas em caso de falha
+    restart: unless-stopped
+
+    # Mapeamento de portas (HOST:CONTAINER)
     ports:
-      # Mapeia a porta do seu host para a porta do container (HOST:CONTAINER)
-      - "5015:5015"
+      - "${HOST_PORT:-5015}:5015"
+
+    # Variáveis de ambiente
     environment:
-      # Variáveis de ambiente necessárias para a aplicação
-      # É recomendado usar um arquivo .env para dados sensíveis
       NODE_ENV: production
-      PORT: 5015 # Garante que a porta no container é a mesma exposta
-      DB_URL: ${DB_URL} # Pega do arquivo .env
-      SENDER_EMAIL: ${SENDER_EMAIL} # Pega do arquivo .env
-      SENDER_PASSWORD: ${SENDER_PASSWORD} # Pega do arquivo .env
-      MASTER_KEY: ${MASTER_KEY} # Pega do arquivo .env
-    # Você pode descomentar a linha abaixo se quiser usar um arquivo .env específico
-    # env_file:
-    #   - .env.production
+      PORT: 5016
+      DB_URL: ${DB_URL}
+      SENDER_EMAIL: ${SENDER_EMAIL}
+      SENDER_PASSWORD: ${SENDER_PASSWORD}
+      MASTER_KEY: ${MASTER_KEY}
+      TZ: America/Sao_Paulo
+
+    # Arquivo .env (recomendado)
+    env_file:
+      - .env
+
+    # Healthcheck para monitorar o status do container
+    healthcheck:
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:5015/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Limites de recursos (ajuste conforme necessário)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+    # Configuração de logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Rede personalizada
+    networks:
+      - mailsender-network
+    # Volumes (opcional - descomente se precisar persistir dados)
+    # volumes:
+    #   - mailsender-data:/app/data
+    #   - ./logs:/app/logs
+
+    # Definição de redes
+networks:
+  mailsender-network:
+    driver: bridge
+    name: mailsender-network
+
+# Definição de volumes (opcional)
+# volumes:
+#   mailsender-data:
+#     driver: local
+#     name: mailsender-data
