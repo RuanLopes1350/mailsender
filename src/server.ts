@@ -7,6 +7,7 @@ import { apiKeyMiddleware } from './middleware/apiKeyMiddleware.js';
 import ApiKeyController from './controller/apiKeyController.js';
 import EmailController from './controller/emailController.js';
 import StatsController from './controller/statsController.js';
+import cors from 'cors';
 
 // Carrega variáveis de ambiente
 dotenv.config();
@@ -16,6 +17,9 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+    origin: '*'
+}));
 
 // Middleware de log de requisições
 app.use(requestLoggerMiddleware);
@@ -46,6 +50,11 @@ app.get('/api/emails/meus', apiKeyMiddleware, emailController.listarEmailsDoUsua
 
 // Rota de estatísticas gerais
 app.get('/api/stats', statsController.obterEstatisticasGerais);
+
+// Rota 404 para rotas não encontradas
+app.use((req, res) => {
+    res.status(404).json({ message: 'Rota não encontrada' });
+});
 
 // Conecta ao banco de dados e inicia o servidor
 const PORT = process.env.PORT || 3000;

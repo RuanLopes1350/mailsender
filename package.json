@@ -22,6 +22,7 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@types/yamljs": "^0.2.34",
     "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -38,6 +39,7 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "chai": "^6.0.1",
     "mjml-cli": "^4.15.3",
     "mocha": "^11.7.2",
