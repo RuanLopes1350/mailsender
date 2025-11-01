@@ -38,11 +38,23 @@ class EmailController {
             }
 
             const apiKeyUser = req.apiKeyUser ? String(req.apiKeyUser) : 'unknown';
-
-            const credentials:IApiKey | any = await this.apiKeyService.obterUsuarioPorApiKey(apiKeyUser)
-            let email = credentials?.email
-            let pass = credentials?.pass
             
+            // Pega a API Key do header para buscar as credenciais
+            const apiKeyFromHeader = req.headers['x-api-key'] as string;
+            
+            console.log(`   🔍 Buscando credenciais para a API Key...`);
+            const credentials = await this.apiKeyService.obterUsuarioPorApiKey(apiKeyFromHeader);
+            
+            if (!credentials) {
+                console.log(`   ❌ Credenciais não encontradas`);
+                res.status(401).json({ message: 'Credenciais de email não encontradas' });
+                return;
+            }
+            
+            const email = credentials.email;
+            const pass = credentials.pass;
+            
+            console.log(`   ✓ Credenciais encontradas (email: ${email})`);
 
             // Registra o email no banco como 'pending'
             const emailId = await this.emailService.registrarEmail({

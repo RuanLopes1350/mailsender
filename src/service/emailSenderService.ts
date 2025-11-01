@@ -25,26 +25,22 @@ class EmailSenderService {
 
     // Obtém ou cria o transporter do Nodemailer
     private async obterTransporter(email: string, pass: string): Promise<nodemailer.Transporter> {
-        if (this.transporter) {
-            return this.transporter;
-        }
+        // ❌ NÃO reutilize o transporter - cada usuário tem credenciais diferentes!
+        // Sempre cria um novo transporter com as credenciais específicas
+        
+        console.log(`   🔐 Criando transporter com:`);
+        console.log(`      Email: ${email}`);
+        console.log(`      Senha: ${pass ? '***' + pass.slice(-4) : 'UNDEFINED'}`);
 
-        const senderEmail = email;
-        const senderPassword = pass;
-
-        if (!senderEmail || !senderPassword) {
-            throw new Error('Credenciais de email não configuradas no .env');
-        }
-
-        this.transporter = nodemailer.createTransport({
+        const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: senderEmail,
-                pass: senderPassword
+                user: email,
+                pass: pass
             }
         });
 
-        return this.transporter;
+        return transporter;
     }
 
     // Envia um email usando template MJML
@@ -75,6 +71,7 @@ class EmailSenderService {
             console.log(`   📮 [4/4] Enviando email via transporte...`);
             console.log(`   De: ${email}`);
             console.log(`   Para: ${to}`);
+            console.log(`   Assunto: ${subject}`);
             
             // 4. Envia o email
             const transporter = await this.obterTransporter(email, pass);
