@@ -11,6 +11,8 @@ const TEMPLATE_DIR = path.resolve('src', 'mail', 'templates');
 
 // Interface para os parâmetros de envio de email
 interface EnviarEmailParams {
+    email: string;
+    pass: string;
     to: string;
     subject: string;
     template: string;
@@ -22,13 +24,13 @@ class EmailSenderService {
     private transporter: nodemailer.Transporter | null = null;
 
     // Obtém ou cria o transporter do Nodemailer
-    private async obterTransporter(): Promise<nodemailer.Transporter> {
+    private async obterTransporter(email: string, pass: string): Promise<nodemailer.Transporter> {
         if (this.transporter) {
             return this.transporter;
         }
 
-        const senderEmail = process.env.SENDER_EMAIL;
-        const senderPassword = process.env.SENDER_PASSWORD;
+        const senderEmail = email;
+        const senderPassword = pass;
 
         if (!senderEmail || !senderPassword) {
             throw new Error('Credenciais de email não configuradas no .env');
@@ -46,7 +48,7 @@ class EmailSenderService {
     }
 
     // Envia um email usando template MJML
-    async enviarEmail({ to, subject, template, data = {} }: EnviarEmailParams): Promise<any> {
+    async enviarEmail({ email, pass, to, subject, template, data = {} }: EnviarEmailParams): Promise<any> {
         try {
             console.log(`   📄 [1/4] Carregando template '${template}.mjml'...`);
             
@@ -71,13 +73,13 @@ class EmailSenderService {
             }
 
             console.log(`   📮 [4/4] Enviando email via transporte...`);
-            console.log(`   De: ${process.env.SENDER_EMAIL}`);
+            console.log(`   De: ${email}`);
             console.log(`   Para: ${to}`);
             
             // 4. Envia o email
-            const transporter = await this.obterTransporter();
+            const transporter = await this.obterTransporter(email, pass);
             const info = await transporter.sendMail({
-                from: process.env.SENDER_EMAIL,
+                from: email,
                 to,
                 subject,
                 html

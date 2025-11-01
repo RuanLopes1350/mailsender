@@ -2,15 +2,19 @@ import { Response } from 'express';
 import { RequestWithUser } from '../middleware/apiKeyMiddleware.js';
 import EmailService from '../service/emailService.js';
 import EmailSenderService from '../service/emailSenderService.js';
+import ApiKeyService from '../service/apiKeyService.js';
+import { IApiKey } from '../models/apiKey.js';
 
 // Controller responsável por gerenciar as requisições relacionadas aos Emails
 class EmailController {
     private emailService: EmailService;
     private emailSenderService: EmailSenderService;
+    private apiKeyService: ApiKeyService
 
     constructor() {
         this.emailService = new EmailService();
         this.emailSenderService = new EmailSenderService();
+        this.apiKeyService = new ApiKeyService();
     }
 
     // Envia um email usando template MJML
@@ -27,11 +31,18 @@ class EmailController {
             // Validação básica
             if (!to || !subject || !template) {
                 console.log(`   ❌ Dados incompletos`);
-                res.status(400).json({ 
-                    message: 'Campos obrigatórios: to, subject, template' 
+                res.status(400).json({
+                    message: 'Campos obrigatórios: to, subject, template'
                 });
                 return;
             }
+
+            const apiKeyUser = req.apiKeyUser ? String(req.apiKeyUser) : 'unknown';
+
+            const credentials:IApiKey | any = await this.apiKeyService.obterUsuarioPorApiKey(apiKeyUser)
+            let email = credentials?.email
+            let pass = credentials?.pass
+            
 
             // Registra o email no banco como 'pending'
             const emailId = await this.emailService.registrarEmail({
@@ -39,16 +50,16 @@ class EmailController {
                 subject,
                 template,
                 data,
-                apiKeyUser: req.apiKeyUser || 'unknown'
+                apiKeyUser: apiKeyUser
             });
 
             // Tenta enviar o email
             try {
-                await this.emailSenderService.enviarEmail({ to, subject, template, data });
-                
+                await this.emailSenderService.enviarEmail({ to, subject, template, data, email, pass });
+
                 // Atualiza o status para 'sent'
                 await this.emailService.atualizarStatusEmail(emailId, 'sent');
-                
+
                 res.status(202).json({
                     message: 'Email enviado com sucesso',
                     emailId
@@ -56,11 +67,11 @@ class EmailController {
             } catch (sendError) {
                 // Atualiza o status para 'failed'
                 await this.emailService.atualizarStatusEmail(
-                    emailId, 
-                    'failed', 
+                    emailId,
+                    'failed',
                     (sendError as Error).message
                 );
-                
+
                 console.error(`   ❌ Falha no envio do email:`, sendError);
                 res.status(500).json({
                     message: 'Falha ao enviar email',
@@ -86,9 +97,9 @@ class EmailController {
             res.json(stats);
         } catch (error) {
             console.error(`   ❌ Erro ao obter estatísticas:`, error);
-            res.status(500).json({ 
+            res.status(500).json({
                 message: 'Erro ao obter estatísticas',
-                error: (error as Error).message 
+                error: (error as Error).message
             });
         }
     };
@@ -98,16 +109,16 @@ class EmailController {
         try {
             const limite = parseInt(req.query.limit as string) || 10;
             console.log(`\n📋 Listando ${limite} emails recentes...`);
-            
+
             const emails = await this.emailService.buscarEmailsRecentes(limite);
             console.log(`   ✓ ${emails.length} email(s) encontrado(s)`);
-            
+
             res.json(emails);
         } catch (error) {
             console.error(`   ❌ Erro ao listar emails:`, error);
-            res.status(500).json({ 
+            res.status(500).json({
                 message: 'Erro ao listar emails',
-                error: (error as Error).message 
+                error: (error as Error).message
             });
         }
     };
@@ -121,16 +132,16 @@ class EmailController {
             }
 
             console.log(`\n📋 Listando emails do usuário: ${req.apiKeyUser}...`);
-            
+
             const emails = await this.emailService.buscarEmailsDoUsuario(req.apiKeyUser);
             console.log(`   ✓ ${emails.length} email(s) encontrado(s)`);
-            
+
             res.json(emails);
         } catch (error) {
             console.error(`   ❌ Erro ao listar emails do usuário:`, error);
-            res.status(500).json({ 
+            res.status(500).json({
                 message: 'Erro ao listar emails do usuário',
-                error: (error as Error).message 
+                error: (error as Error).message
             });
         }
     };

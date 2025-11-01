@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import ApiKeyRepository from '../repository/apiKeyRepository.js';
+import { IApiKey } from '../models/apiKey.js';
 
 const SALT_ROUNDS = 15;
 
@@ -13,7 +14,7 @@ class ApiKeyService {
     }
 
     // Gera uma nova API Key para um usuário
-    async gerarApiKey(usuario: string = 'noName'): Promise<string> {
+    async gerarApiKey(usuario: string = 'noName', email: string, pass: string): Promise<string> {
         console.log(`\n🔑 Gerando nova API Key para usuário: ${usuario}`);
 
         // Verifica se já existe uma chave ativa para este usuário
@@ -37,6 +38,8 @@ class ApiKeyService {
         console.log(`   💾 Salvando no banco de dados...`);
         await this.apiKeyRepository.criar({
             usuario,
+            email: email,
+            pass: pass,
             apiKey: hash,
             createdAt: new Date(),
             lastUsed: null,
@@ -72,14 +75,15 @@ class ApiKeyService {
     }
 
     // Obtém o usuário associado a uma API Key
-    async obterUsuarioPorApiKey(apiKey: string): Promise<string | null> {
+    async obterUsuarioPorApiKey(apiKey: string): Promise<IApiKey | null> {
         try {
-            const chaves = await this.apiKeyRepository.buscarTodas();
+            const chaves:IApiKey[] = await this.apiKeyRepository.buscarTodas();
 
             for (const chave of chaves) {
                 const isValid = await bcrypt.compare(apiKey, chave.apiKey);
                 if (isValid) {
-                    return chave.usuario;
+                    let usuario:IApiKey = chave
+                    return usuario;
                 }
             }
             

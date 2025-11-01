@@ -13,11 +13,11 @@ class ApiKeyController {
     // Gera uma nova API Key
     gerarApiKey = async (req: RequestWithUser, res: Response): Promise<void> => {
         try {
-            const { name = 'semNome' } = req.body ?? {};
+            const { name = 'semNome', email, pass } = req.body ?? {};
             console.log(`\n🔐 Requisição para gerar API Key`);
             console.log(`   Nome: ${name}`);
             
-            const apiKey = await this.apiKeyService.gerarApiKey(name);
+            const apiKey = await this.apiKeyService.gerarApiKey(name, email, pass);
             
             console.log(`   ✅ Chave gerada com sucesso`);
             res.status(201).json({

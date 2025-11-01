@@ -4,6 +4,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IApiKey extends Document {
     usuario: string;
     apiKey: string;
+    email: string;
+    pass: string;
     createdAt: Date;
     lastUsed: Date | null;
     isActive: boolean;
@@ -21,6 +23,16 @@ const apiKeySchema = new Schema<IApiKey>({
         type: String, 
         required: true,
         index: true 
+    },
+    email: {
+        type: String,
+        required: true,
+        index: true
+    },
+    pass: {
+        type: String,
+        required: true,
+        index: true
     },
     createdAt: { 
         type: Date, 
