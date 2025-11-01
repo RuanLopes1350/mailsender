@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import AdminService from "../service/adminService";
+import AdminService from "../service/adminService.js";
 import { Request, Response } from "express";
-import { IAdmin } from "../models/admin";
+import { IAdmin } from "../models/admin.js";
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 

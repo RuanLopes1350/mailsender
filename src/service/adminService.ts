@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import AdminRepository from "../repository/adminRepository";
-import { IAdmin } from "../models/admin";
+import AdminRepository from "../repository/adminRepository.js";
+import { IAdmin } from "../models/admin.js";
 
 class AdminService {
     private repository: AdminRepository;

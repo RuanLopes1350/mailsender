@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import AdminModel, { IAdmin } from "../models/admin";
+import AdminModel, { IAdmin } from "../models/admin.js";
 
 class AdminRepository {
     private model: mongoose.Model<IAdmin>;
