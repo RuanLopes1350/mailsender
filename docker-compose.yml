@@ -10,7 +10,7 @@ services:
 
     # Mapeamento de portas (HOST:CONTAINER)
     ports:
-      - "${HOST_PORT:-5015}:5015"
+      - "${HOST_PORT:-5016}:5016"
 
     # Variáveis de ambiente
     environment:
@@ -20,6 +20,9 @@ services:
       SENDER_EMAIL: ${SENDER_EMAIL}
       SENDER_PASSWORD: ${SENDER_PASSWORD}
       MASTER_KEY: ${MASTER_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       TZ: America/Sao_Paulo
 
     # Arquivo .env (recomendado)

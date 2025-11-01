@@ -11,7 +11,7 @@
 
 **Microserviço profissional para envio de emails com templates personalizáveis, painel administrativo completo e autenticação por API Keys.**
 
-[🚀 Ver Demo](https://mailsender-one.vercel.app/painel) • [📖 Tutorial](TUTORIAL.md) • [🐛 Reportar Bug](https://github.com/RuanLopes1350/mailsender-ts/issues) • [📄 Documentação](PROJETO.md)
+[🚀 Ver Demo](https://mailsender-one.vercel.app/painel) • [📖 Tutorial](TUTORIAL.md) • [� Autenticação](AUTHENTICATION.md) • [�🐛 Reportar Bug](https://github.com/RuanLopes1350/mailsender-ts/issues) • [📄 Documentação](PROJETO.md)
 
 </div>
 
@@ -23,6 +23,7 @@
 - [Características](#-características)
 - [Tecnologias](#️-tecnologias)
 - [Instalação](#-instalação)
+- [Arquitetura de Autenticação](#-arquitetura-de-autenticação)
 - [Configuração](#️-configuração)
 - [Como Usar](#-como-usar)
 - [Templates](#-templates)
@@ -30,6 +31,9 @@
 - [Deploy na Vercel](#-deploy-na-vercel)
 - [API Endpoints](#-api-endpoints)
 - [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Segurança](#-segurança)
+- [Boas Práticas de Segurança](#-boas-práticas-de-segurança)
+- [Troubleshooting](#-troubleshooting)
 - [Contribuindo](#-contribuindo)
 - [Licença](#-licença)
 
@@ -56,16 +60,18 @@
 ### 🎯 Core
 - 🚀 **API RESTful** completa para envio de emails
 - 🔐 **Autenticação segura** com API Keys (bcrypt hash)
-- 📧 **Templates MJML** responsivos e profissionais
+- � **Sistema de autenticação JWT** para painel administrativo
+- �📧 **Templates MJML** responsivos e profissionais
 - 🎨 **Altamente personalizável** - cores, textos, botões, logos
 - 📊 **MongoDB** para persistência de dados
 - ⚡ **Performance** otimizada para produção
 
 ### 🖥️ Painel Administrativo
-- � **Dashboard** com métricas em tempo real
-- 🔑 **Gerenciamento de API Keys** (criar, listar, revogar)
+- 🔒 **Login seguro** com JWT (8 horas de expiração)
+- 📈 **Dashboard** com métricas em tempo real
+- 🔑 **Gerenciamento de API Keys** (criar, listar, revogar, ativar/desativar)
 - ✉️ **Teste de emails** diretamente pelo painel
-- � **Logs de atividade** recentes
+- 📜 **Logs de atividade** recentes
 - 📱 **Interface responsiva** para todos os dispositivos
 - 🎯 **Auto-refresh** de estatísticas
 
@@ -100,6 +106,8 @@
 - MJML 4.15
 - Handlebars 4.7
 - bcrypt 6.0
+- jsonwebtoken 9.0
+- cors 2.8
 
 </td>
 <td valign="top" width="33%">
@@ -169,7 +177,17 @@ SENDER_PASSWORD=sua-senha-ou-app-password
 
 # Segurança
 MASTER_KEY=sua-chave-mestra-secreta
+JWT_SECRET=sua-chave-jwt-super-secreta-aqui
+
+# Admin Inicial (credenciais do painel administrativo)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=SuaSenhaSegura123
 ```
+
+⚠️ **IMPORTANTE**: 
+- Altere `ADMIN_PASSWORD` para uma senha forte em produção
+- Nunca commite o arquivo `.env` no Git
+- Use senhas diferentes para `MASTER_KEY` e `JWT_SECRET`
 
 ### 4️⃣ Configure o Gmail App Password
 
@@ -193,11 +211,83 @@ npm run build
 npm start
 ```
 
-### 6️⃣ Acesse o Painel
+### 6️⃣ Acesse o Painel Administrativo
 
 ```
 http://localhost:5015/painel
 ```
+
+**Credenciais padrão:**
+- **Usuário**: `admin` (ou o valor de `ADMIN_USERNAME`)
+- **Senha**: `admin` (ou o valor de `ADMIN_PASSWORD`)
+
+⚠️ **IMPORTANTE**: Altere a senha padrão em produção!
+
+---
+
+## 🔐 Arquitetura de Autenticação
+
+O Mail Sender implementa **dois sistemas de autenticação independentes**:
+
+### 1. JWT (JSON Web Token) - Painel Administrativo
+
+**Usado para:** Acesso ao painel administrativo e gerenciamento do sistema
+
+**Como funciona:**
+1. Admin faz login com username/password
+2. Servidor valida credenciais e gera um JWT
+3. JWT é retornado ao cliente com validade de 8 horas
+4. Cliente envia o JWT no header `Authorization: Bearer <token>`
+5. Middleware `authMiddleware` valida o token em cada requisição
+
+**Rotas protegidas por JWT:**
+- `GET /api/stats` - Estatísticas
+- `GET /api/keys` - Listar API Keys
+- `DELETE /api/keys/:name` - Revogar chave
+- `PATCH /api/keys/:name/inativar` - Desativar chave
+- `PATCH /api/keys/:name/reativar` - Reativar chave
+- `GET /api/emails/recentes` - Listar emails
+
+**Payload do JWT:**
+```json
+{
+  "id": "507f1f77bcf86cd799439011",
+  "username": "admin",
+  "iat": 1730419200,
+  "exp": 1730448000
+}
+```
+
+### 2. API Key - Desenvolvedores
+
+**Usado para:** Integração de aplicações externas para enviar emails
+
+**Como funciona:**
+1. Admin gera uma API Key com um nome identificador
+2. Sistema gera uma chave única e a retorna (hash é armazenado)
+3. Desenvolvedor usa a chave no header `x-api-key: <chave>`
+4. Middleware `apiKeyMiddleware` valida a chave e identifica o usuário
+5. Chave permanece válida até ser revogada ou desativada
+
+**Rotas protegidas por API Key:**
+- `POST /api/emails/send` - Enviar email
+- `GET /api/emails/meus` - Listar meus emails
+
+**Formato da API Key:**
+```
+mail_1234567890abcdef_ghijklmnopqrstuv
+```
+
+### Por que dois sistemas?
+
+- **JWT**: Sessões temporárias para humanos (admin)
+- **API Key**: Autenticação permanente para máquinas (aplicações)
+
+Isso garante:
+- ✅ Segurança granular por tipo de acesso
+- ✅ Revogação independente (token expira, key persiste)
+- ✅ Rastreabilidade (quem fez o quê)
+- ✅ Facilidade de integração
 
 ---
 
@@ -420,6 +510,11 @@ Template versátil para notificações, confirmações, alertas, etc.
 
 Acesse `http://localhost:5015/painel` para gerenciar o sistema.
 
+**Login Obrigatório:**
+- O painel agora requer autenticação via JWT
+- Após o login, o token é válido por 8 horas
+- Use as credenciais configuradas nas variáveis de ambiente
+
 ### Funcionalidades
 
 #### 📊 Dashboard
@@ -429,12 +524,13 @@ Acesse `http://localhost:5015/painel` para gerenciar o sistema.
 - Emails recentes
 - Auto-refresh a cada 30 segundos
 
-#### � API Keys
+#### 🔑 API Keys
 - **Gerar** novas chaves com nomes personalizados
 - **Listar** todas as chaves ativas
-- **Revogar** chaves com confirmação
+- **Ativar/Desativar** chaves temporariamente
+- **Revogar** chaves permanentemente com confirmação
 - **Copiar** chaves para clipboard
-- Visualizar prefixo e data de criação
+- Visualizar prefixo, status e data de criação
 
 #### ✉️ Testar Emails
 - Enviar emails de teste diretamente
@@ -499,12 +595,17 @@ vercel
 
 Configure no painel da Vercel:
 ```
-MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/mailsender
+DB_URL=mongodb+srv://usuario:senha@cluster.mongodb.net/mailsender
 SENDER_EMAIL=seu-email@gmail.com
 SENDER_PASSWORD=app-password
-MASTER_KEY=sua-chave-secreta
+MASTER_KEY=sua-chave-mestra-secreta
+JWT_SECRET=sua-chave-jwt-super-secreta
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=SuaSenhaSeguraDeProducao123
 NODE_ENV=production
 ```
+
+⚠️ **IMPORTANTE**: Use senhas fortes diferentes em produção!
 
 ### 4️⃣ Diferenças de URL
 
@@ -524,40 +625,76 @@ https://seu-projeto.vercel.app/api/emails/send
 
 ## 📡 API Endpoints
 
-### Autenticação
+### Tipos de Autenticação
 
-Todas as rotas de envio requerem o header:
-```
-x-api-key: SUA_API_KEY
-```
+O sistema usa **dois tipos de autenticação**:
+
+1. **JWT Token** - Para o painel administrativo
+   ```
+   Authorization: Bearer SEU_JWT_TOKEN
+   ```
+
+2. **API Key** - Para desenvolvedores enviarem emails
+   ```
+   x-api-key: SUA_API_KEY
+   ```
 
 ### Rotas Disponíveis
 
 | Método | Endpoint | Autenticação | Descrição |
 |--------|----------|--------------|-----------|
-| `GET` | `/` | ❌ | Health check |
-| `GET` | `/status` | ❌ | Status do servidor |
-| `GET` | `/stats` | ❌ | Estatísticas |
-| `POST` | `/keys/generate` | ❌ | Gerar API Key |
-| `GET` | `/keys` | ❌ | Listar chaves |
-| `DELETE` | `/keys/:name` | ❌ | Revogar chave |
-| `POST` | `/api/emails/send` | ✅ | Enviar email |
+| `GET` | `/api` | ❌ | Health check |
+| `GET` | `/api/status` | ❌ | Status do servidor |
+| `POST` | `/api/login` | ❌ | Login admin (retorna JWT) |
+| `POST` | `/api/keys/generate` | ❌ | Gerar API Key |
+| `GET` | `/api/stats` | 🔑 JWT | Estatísticas gerais |
+| `GET` | `/api/keys` | 🔑 JWT | Listar todas as chaves |
+| `DELETE` | `/api/keys/:name` | 🔑 JWT | Revogar chave |
+| `PATCH` | `/api/keys/:name/inativar` | 🔑 JWT | Desativar chave |
+| `PATCH` | `/api/keys/:name/reativar` | 🔑 JWT | Reativar chave |
+| `GET` | `/api/emails/recentes` | 🔑 JWT | Listar emails recentes |
+| `POST` | `/api/emails/send` | 🔐 API Key | Enviar email |
+| `GET` | `/api/emails/meus` | 🔐 API Key | Listar meus emails |
 
 ### Exemplos de Requisição
 
 **Health Check:**
 ```bash
-curl http://localhost:5015/
+curl http://localhost:5015/api
+```
+
+**Login (obter JWT):**
+```bash
+curl -X POST http://localhost:5015/api/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "admin"
+  }'
+```
+
+**Resposta do Login:**
+```json
+{
+  "success": true,
+  "message": "Login bem sucedido!",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "username": "admin",
+    "email": "admin"
+  }
+}
 ```
 
 **Gerar API Key:**
 ```bash
-curl -X POST http://localhost:5015/keys/generate \
+curl -X POST http://localhost:5015/api/keys/generate \
   -H "Content-Type: application/json" \
   -d '{"name": "producao"}'
 ```
 
-**Enviar Email:**
+**Enviar Email (requer API Key):**
 ```bash
 curl -X POST http://localhost:5015/api/emails/send \
   -H "Content-Type: application/json" \
@@ -573,14 +710,22 @@ curl -X POST http://localhost:5015/api/emails/send \
   }'
 ```
 
-**Listar API Keys:**
+**Listar API Keys (requer JWT):**
 ```bash
-curl http://localhost:5015/keys
+curl http://localhost:5015/api/keys \
+  -H "Authorization: Bearer SEU_JWT_TOKEN"
 ```
 
-**Revogar API Key:**
+**Desativar API Key (requer JWT):**
 ```bash
-curl -X DELETE http://localhost:5015/keys/producao
+curl -X PATCH http://localhost:5015/api/keys/producao/inativar \
+  -H "Authorization: Bearer SEU_JWT_TOKEN"
+```
+
+**Revogar API Key (requer JWT):**
+```bash
+curl -X DELETE http://localhost:5015/api/keys/producao \
+  -H "Authorization: Bearer SEU_JWT_TOKEN"
 ```
 
 ### Respostas
@@ -731,21 +876,28 @@ src/mail/templates/meutemplate.mjml
 
 ### Medidas Implementadas
 
-- ✅ **Bcrypt** - Hash de API Keys com 15 salt rounds
+- ✅ **JWT Authentication** - Tokens com expiração de 8 horas
+- ✅ **Bcrypt** - Hash de senhas e API Keys com 15 salt rounds
 - ✅ **MongoDB** - Armazenamento seguro de dados
 - ✅ **Variáveis de Ambiente** - Credenciais não commitadas
 - ✅ **Validação** - Entrada sanitizada em todas as rotas
-- ✅ **Autenticação** - API Keys obrigatórias para envio
+- ✅ **Autenticação Dupla** - JWT para admin, API Keys para devs
 - ✅ **Logs** - Rastreabilidade de todas as ações
+- ✅ **CORS** - Configurável por ambiente
 
 ### Recomendações para Produção
 
-- 🔒 Use HTTPS em produção
-- 🚦 Implemente rate limiting
-- 📊 Configure monitoramento (Sentry, DataDog)
-- 🔄 Rotacione API Keys periodicamente
-- 🛡️ Use WAF (Web Application Firewall)
-- 📧 Configure SPF, DKIM e DMARC no domínio
+- 🔒 **Use HTTPS** em produção (obrigatório para JWT)
+- � **Altere as senhas padrão** imediatamente
+- 🎲 **Gere JWT_SECRET forte** (mínimo 32 caracteres aleatórios)
+- ⏱️ **Configure expiração de tokens** adequadamente (padrão: 8h)
+- �🚦 **Implemente rate limiting** para prevenir ataques
+- 📊 **Configure monitoramento** (Sentry, DataDog)
+- 🔄 **Rotacione API Keys** periodicamente
+- 🛡️ **Use WAF** (Web Application Firewall)
+- 📧 **Configure SPF, DKIM e DMARC** no domínio
+- 🔐 **Nunca exponha tokens** em logs ou URLs
+- 💾 **Armazene tokens** em localStorage/cookies HTTP-only
 
 ---
 
@@ -831,6 +983,52 @@ mongosh "mongodb://localhost:27017/mailsender"
 npm run build
 npm start
 ```
+
+### Não consigo fazer login no painel
+
+**1. Verifique as credenciais:**
+```env
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin
+```
+
+**2. Verifique se JWT_SECRET está configurado:**
+```env
+JWT_SECRET=uma-chave-secreta-longa
+```
+
+**3. Limpe o localStorage do navegador:**
+- Abra DevTools (F12)
+- Vá em Application > Local Storage
+- Limpe todos os dados
+- Tente fazer login novamente
+
+**4. Verifique os logs do servidor:**
+```bash
+npm run dev
+# Observe erros relacionados a JWT ou admin
+```
+
+### Token JWT expirado
+
+- O token expira após **8 horas**
+- Faça login novamente no painel
+- O sistema vai gerar um novo token automaticamente
+
+### API Key não funciona
+
+**1. Verifique se a chave está ativa:**
+```bash
+curl http://localhost:5015/api/keys \
+  -H "Authorization: Bearer SEU_JWT_TOKEN"
+```
+
+**2. Verifique o header:**
+```
+x-api-key: SUA_CHAVE_COMPLETA_AQUI
+```
+
+**3. Reative a chave se estiver desativada**
 
 ---
 
@@ -927,19 +1125,11 @@ Se este projeto foi útil para você, considere:
 
 ---
 
-## � Links Úteis
 
-- 📖 [Tutorial Completo](TUTORIAL.md)
-- 🎨 [MJML Documentation](https://mjml.io/documentation/)
-- � [Nodemailer Docs](https://nodemailer.com/)
-- 🍃 [MongoDB Docs](https://www.mongodb.com/docs/)
-- ▲ [Vercel Docs](https://vercel.com/docs)
-
----
 
 <div align="center">
 
-**Desenvolvido com ❤️ por [Ruan Lopes](https://github.com/RuanLopes1350)**
+**Desenvolvido por [Ruan Lopes](https://github.com/RuanLopes1350)**
 
 ⭐ **[mailsender-ts](https://github.com/RuanLopes1350/mailsender-ts)** ⭐
 

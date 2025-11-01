@@ -4,15 +4,157 @@ Guia rápido e prático para integrar o sistema de envio de emails ao seu projet
 
 ---
 
-## 🚀 Início Rápido
+## 🔐 Autenticação
 
-### 1. Gerar uma API Key
+O sistema possui **dois tipos de autenticação**:
+
+### 1️⃣ JWT Token (Painel Administrativo)
+- 👤 **Usado por:** Administradores humanos
+- 🎯 **Propósito:** Gerenciar o sistema (keys, stats, emails)
+- 🔑 **Login:** `POST /api/login` com username/password
+- ⏱️ **Validade:** 8 horas (renovável com novo login)
+- 🔒 **Credenciais padrão:** `admin` / `admin` (altere em produção!)
+
+### 2️⃣ API Key (Desenvolvedores)
+- 🤖 **Usado por:** Aplicações e sistemas automatizados
+- 🎯 **Propósito:** Enviar emails programaticamente
+- 🔑 **Geração:** Pelo painel administrativo ou via API
+- ⏱️ **Validade:** Permanente até ser revogada/desativada
+- 🔒 **Formato:** `mail_1234567890abcdef_ghijklmnopqrstuv`
+
+---
+
+### 🔄 Fluxo de Autenticação
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    PAINEL ADMINISTRATIVO                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. Admin faz login (username/password)                     │
+│           ↓                                                  │
+│  2. Servidor valida e retorna JWT                           │
+│           ↓                                                  │
+│  3. Cliente salva JWT (localStorage)                        │
+│           ↓                                                  │
+│  4. Requisições incluem: Authorization: Bearer <JWT>        │
+│           ↓                                                  │
+│  5. Middleware valida JWT e permite acesso                  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                    INTEGRAÇÃO (API KEY)                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. Admin gera API Key pelo painel                          │
+│           ↓                                                  │
+│  2. Sistema retorna chave única (copiar!)                   │
+│           ↓                                                  │
+│  3. Dev adiciona chave na aplicação (.env)                  │
+│           ↓                                                  │
+│  4. Requisições incluem: x-api-key: <API_KEY>               │
+│           ↓                                                  │
+│  5. Middleware valida chave e permite envio                 │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## �🚀 Início Rápido
+
+### 1. Fazer Login no Painel (Opcional)
+
+Se você quiser usar o painel administrativo, primeiro faça login:
+
+**Endpoint:**
+```
+POST /api/login
+```
+
+**Body (JSON):**
+```json
+{
+  "username": "admin",
+  "password": "admin"
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "message": "Login bem sucedido!",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "username": "admin",
+    "email": "admin"
+  }
+}
+```
+
+💡 **Dica:** Salve o `token` - ele será usado nas requisições ao painel.
+
+**Exemplo de Login com JavaScript:**
+```javascript
+async function fazerLogin() {
+  const response = await fetch('http://localhost:5015/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: 'admin',
+      password: 'admin'
+    })
+  });
+
+  const data = await response.json();
+  
+  if (data.success) {
+    // Salva o token para usar depois
+    localStorage.setItem('jwt_token', data.token);
+    console.log('Login bem-sucedido!', data.user);
+  } else {
+    console.error('Erro no login:', data.message);
+  }
+}
+```
+
+**Exemplo de Login com Python:**
+```python
+import requests
+import json
+
+def fazer_login():
+    url = 'http://localhost:5015/api/login'
+    payload = {
+        'username': 'admin',
+        'password': 'admin'
+    }
+    
+    response = requests.post(url, json=payload)
+    data = response.json()
+    
+    if data.get('success'):
+        token = data['token']
+        # Salva o token em variável ou arquivo
+        print(f'Login bem-sucedido! Token: {token[:20]}...')
+        return token
+    else:
+        print(f'Erro no login: {data.get("message")}')
+        return None
+```
+
+---
+
+### 2. Gerar uma API Key
 
 Antes de enviar emails, você precisa de uma chave de API.
 
 **Endpoint:**
 ```
-POST /keys/generate
+POST /api/keys/generate
 ```
 
 **Body (JSON):**
@@ -24,7 +166,7 @@ POST /keys/generate
 
 **Exemplo com cURL:**
 ```bash
-curl -X POST http://localhost:5015/keys/generate \
+curl -X POST http://localhost:5015/api/keys/generate \
   -H "Content-Type: application/json" \
   -d '{"name": "meu-sistema-producao"}'
 ```
@@ -43,6 +185,12 @@ curl -X POST http://localhost:5015/keys/generate \
 ---
 
 ## ✉️ Enviar Email
+
+### Como Funciona
+
+1. **Gere uma API Key** (passo acima)
+2. **Use a chave no header** `x-api-key`
+3. **Envie o JSON** com os dados do email
 
 ### Endpoint Principal
 ```
@@ -523,19 +671,54 @@ enviarEmail();
 
 ## 🔐 Gerenciar API Keys
 
+⚠️ **Todas as rotas de gerenciamento requerem JWT Token** (obtido no login)
+
 ### Listar Chaves
 ```bash
-GET /keys
-```
-
-### Revogar Chave
-```bash
-DELETE /keys/{nome-da-chave}
+GET /api/keys
+Authorization: Bearer SEU_JWT_TOKEN
 ```
 
 **Exemplo:**
 ```bash
-curl -X DELETE http://localhost:5015/keys/meu-sistema-producao
+curl http://localhost:5015/api/keys \
+  -H "Authorization: Bearer SEU_JWT_TOKEN"
+```
+
+### Desativar Chave Temporariamente
+```bash
+PATCH /api/keys/{nome-da-chave}/inativar
+Authorization: Bearer SEU_JWT_TOKEN
+```
+
+**Exemplo:**
+```bash
+curl -X PATCH http://localhost:5015/api/keys/meu-sistema-producao/inativar \
+  -H "Authorization: Bearer SEU_JWT_TOKEN"
+```
+
+### Reativar Chave
+```bash
+PATCH /api/keys/{nome-da-chave}/reativar
+Authorization: Bearer SEU_JWT_TOKEN
+```
+
+**Exemplo:**
+```bash
+curl -X PATCH http://localhost:5015/api/keys/meu-sistema-producao/reativar \
+  -H "Authorization: Bearer SEU_JWT_TOKEN"
+```
+
+### Revogar Chave Permanentemente
+```bash
+DELETE /api/keys/{nome-da-chave}
+Authorization: Bearer SEU_JWT_TOKEN
+```
+
+**Exemplo:**
+```bash
+curl -X DELETE http://localhost:5015/api/keys/meu-sistema-producao \
+  -H "Authorization: Bearer SEU_JWT_TOKEN"
 ```
 
 ---
@@ -565,22 +748,37 @@ const API_URL = 'https://seu-projeto.vercel.app/api/emails/send';
 
 ## 📞 Suporte
 
-- Painel Administrativo: `http://localhost:5015/painel`
+- **Painel Administrativo**: `http://localhost:5015/painel`
+- **Login Padrão**: `admin` / `admin` (altere em produção!)
 - Teste seus emails diretamente pelo painel
 - Monitore estatísticas em tempo real
+- Gerencie API Keys com interface visual
 
 ---
 
 ## 📋 Checklist de Integração
 
-- [ ] Gerar API Key
-- [ ] Guardar a chave em variável de ambiente
+- [ ] Configurar variáveis de ambiente (`.env`)
+- [ ] Alterar senha padrão do admin (`ADMIN_PASSWORD`)
+- [ ] Gerar `JWT_SECRET` forte e único
+- [ ] Fazer login no painel administrativo
+- [ ] Gerar API Key pelo painel
+- [ ] Guardar a chave em variável de ambiente no seu projeto
 - [ ] Testar envio pelo painel administrativo
 - [ ] Implementar no código do seu sistema
 - [ ] Testar com email real
 - [ ] Configurar variáveis de ambiente na Vercel (se for fazer deploy)
 - [ ] Ajustar URL base para produção
+- [ ] Desativar chaves de teste em produção
 
 ---
 
 **Pronto! Agora você pode enviar emails profissionais e personalizados facilmente! 🎉**
+
+---
+
+## 📚 Documentação Adicional
+
+- 🔐 **[Guia Completo de Autenticação](AUTHENTICATION.md)** - Tudo sobre JWT e API Keys
+- 📖 **[README Principal](README.md)** - Visão geral do projeto
+- 📄 **[Documentação Técnica](PROJETO.md)** - Detalhes de implementação

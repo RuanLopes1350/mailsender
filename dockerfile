@@ -30,7 +30,7 @@ RUN npm prune --production
 FROM node:20-alpine
 
 # Adiciona metadados à imagem
-LABEL maintainer="ruanlopes1350@gmail.com"
+LABEL maintainer="intel.spec.lopes@gmail.com"
 LABEL description="Mail Sender Microservice"
 LABEL version="2.0.0"
 
