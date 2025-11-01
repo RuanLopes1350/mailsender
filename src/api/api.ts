@@ -26,6 +26,9 @@ const adminService = new AdminService();
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+    origin: '*'
+}));
 
 // Middleware de log de requisições
 app.use(requestLoggerMiddleware);
@@ -36,23 +39,22 @@ const emailController = new EmailController();
 const statsController = new StatsController();
 const adminController = new AdminController();
 
-// Rotas públicas
+// Rotas Públicas
 app.get('/api', statsController.healthCheck);
 app.get('/api/status', statsController.statusDetalhado);
 app.post('/api/login', adminController.login.bind(adminController));
+app.post('/api/keys/generate', apiKeyController.gerarApiKey);
 
 // Rotas Protegidas por JWT (para o Painel Admin)
 app.get('/api/stats', authMiddleware, statsController.obterEstatisticasGerais);
 app.get('/api/keys', authMiddleware, apiKeyController.listarApiKeys);
-app.post('/api/keys/generate', authMiddleware, apiKeyController.gerarApiKey);
 app.delete('/api/keys/:name', authMiddleware, apiKeyController.revogarApiKey);
 app.patch('/api/keys/:name/inativar', authMiddleware, apiKeyController.inativarApiKey);
 app.patch('/api/keys/:name/reativar', authMiddleware, apiKeyController.reativarApiKey);
-
+app.get('/api/emails/recentes', authMiddleware, emailController.listarEmailsRecentes);
 
 // Rotas Protegidas por API Key (para Desenvolvedores)
 app.post('/api/emails/send', apiKeyMiddleware, emailController.enviarEmail);
-app.get('/api/emails/recentes', apiKeyMiddleware, emailController.listarEmailsRecentes);
 app.get('/api/emails/meus', apiKeyMiddleware, emailController.listarEmailsDoUsuario);
 
 // Rota 404
