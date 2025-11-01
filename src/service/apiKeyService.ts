@@ -97,6 +97,8 @@ class ApiKeyService {
     // Lista todas as API Keys
     async listarApiKeys(): Promise<Array<{
         nome: string;
+        email: string;
+        pass: string;
         prefixo: string;
         criadoEm: Date;
         ultimoUso: Date | null;
@@ -107,6 +109,8 @@ class ApiKeyService {
             
             return chaves.map(chave => ({
                 nome: chave.usuario,
+                email: chave.email,
+                pass: chave.pass,
                 prefixo: chave.apiKey.substring(0, 12) + '...',
                 criadoEm: chave.createdAt,
                 ultimoUso: chave.lastUsed,
