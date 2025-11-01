@@ -8,9 +8,19 @@ import ApiKeyController from './controller/apiKeyController.js';
 import EmailController from './controller/emailController.js';
 import StatsController from './controller/statsController.js';
 import cors from 'cors';
+import AdminController from './controller/adminController.js';
+import AdminService from './service/adminService.js';
 
 // Carrega variáveis de ambiente
 dotenv.config();
+
+// Dados de Admin base
+const username: string = process.env.ADMIN_USERNAME || 'admin';
+const password: string = process.env.ADMIN_PASSWORD || 'admin123';
+
+// Cria o admin inicial se não existir
+const adminService = new AdminService();
+
 
 // Registra o tempo de início do servidor
 (global as any).serverStartTime = Date.now();
@@ -27,6 +37,7 @@ app.use(requestLoggerMiddleware);
 const apiKeyController = new ApiKeyController();
 const emailController = new EmailController();
 const statsController = new StatsController();
+const adminController = new AdminController();
 
 // Painel de administração (arquivos estáticos)
 app.use('/painel', express.static(path.resolve('public')));
@@ -51,6 +62,9 @@ app.get('/api/emails/meus', apiKeyMiddleware, emailController.listarEmailsDoUsua
 // Rota de estatísticas gerais
 app.get('/api/stats', statsController.obterEstatisticasGerais);
 
+// Rota de Auth
+app.post('/api/login', adminController.login.bind(adminController));
+
 // Rota 404 para rotas não encontradas
 app.use((req, res) => {
     res.status(404).json({ message: 'Rota não encontrada' });
@@ -62,13 +76,20 @@ const PORT = process.env.PORT || 3000;
 async function iniciarServidor() {
     try {
         console.log('\n🚀 Iniciando Mail Sender Microservice...\n');
-        
+
         // Conecta ao MongoDB
         console.log('📦 Conectando ao banco de dados...');
         await DbConnect.conectar();
-        
+
         // Inicia o servidor
-        app.listen(PORT, () => {
+        app.listen(PORT, async () => {
+            try {
+                await adminService.criarAdmin(username, password);
+                console.log('✅ Admin inicial criado com sucesso');
+            } catch (error) {
+                // Admin já existe
+                console.log('ℹ️  Admin já existe ou já foi criado anteriormente');
+            }
             console.log(`\n✅ Servidor rodando na porta ${PORT}`);
             console.log(`📡 API disponível em: http://localhost:${PORT}/api`);
             console.log(`📊 Status: http://localhost:${PORT}/api/status`);
