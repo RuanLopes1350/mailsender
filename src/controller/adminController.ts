@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 import AdminService from "../service/adminService";
 import { Request, Response } from "express";
 import { IAdmin } from "../models/admin";
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class AdminController {
     private service: AdminService;
@@ -41,15 +45,31 @@ class AdminController {
             // Tentativa de login
             const admin = await this.service.login(username.trim(), password);
 
-            // Remover senha da resposta por segurança
-            const adminResponse = {
-                username: admin.username,
-                _id: (admin as any)._id
+            // Se o login deu certo, GERA O TOKEN
+            const jwtSecret = process.env.JWT_SECRET;
+            if (!jwtSecret) {
+                console.error('Erro de configuração: JWT_SECRET não definida no .env');
+                res.status(500).json({ message: 'Erro interno do servidor.' });
+                return;
+            }
+
+            // Criar o payload do token
+            const payload = {
+                id: (admin as any)._id,
+                username: admin.username
             };
 
+            // Assinar o token
+            const token = jwt.sign(
+                payload,
+                jwtSecret,
+                { expiresIn: '8h' } // Token expira em 8 horas
+            );
+
+            // Enviar o token na resposta
             res.status(200).json({
                 message: "Login bem sucedido!",
-                admin: adminResponse
+                token: token // Frontend deve salvar isso
             });
 
         } catch (error) {

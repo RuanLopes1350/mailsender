@@ -10,6 +10,7 @@ import StatsController from './controller/statsController.js';
 import cors from 'cors';
 import AdminController from './controller/adminController.js';
 import AdminService from './service/adminService.js';
+import { authMiddleware } from './middleware/authMiddleware.js';
 
 // Carrega variáveis de ambiente
 dotenv.config();
@@ -20,7 +21,6 @@ const password: string = process.env.ADMIN_PASSWORD || 'admin123';
 
 // Cria o admin inicial se não existir
 const adminService = new AdminService();
-
 
 // Registra o tempo de início do servidor
 (global as any).serverStartTime = Date.now();
@@ -43,29 +43,26 @@ const adminController = new AdminController();
 app.use('/painel', express.static(path.resolve('public')));
 app.use(express.static(path.resolve('public')));
 
-// Rotas públicas (sem autenticação)
+// Rotas Públicas
 app.get('/api', statsController.healthCheck);
 app.get('/api/status', statsController.statusDetalhado);
+app.post('/api/login', adminController.login.bind(adminController));
 
-// Rotas de API Keys (sem autenticação para permitir geração)
-app.post('/api/keys/generate', apiKeyController.gerarApiKey);
-app.get('/api/keys', apiKeyController.listarApiKeys);
-app.delete('/api/keys/:name', apiKeyController.revogarApiKey);
-app.patch('/api/keys/:name/inativar', apiKeyController.inativarApiKey);
-app.patch('/api/keys/:name/reativar', apiKeyController.reativarApiKey);
-
-// Rotas protegidas por API Key
+// Rotas Protegidas por API Key (para Desenvolvedores)
 app.post('/api/emails/send', apiKeyMiddleware, emailController.enviarEmail);
 app.get('/api/emails/recentes', apiKeyMiddleware, emailController.listarEmailsRecentes);
 app.get('/api/emails/meus', apiKeyMiddleware, emailController.listarEmailsDoUsuario);
 
-// Rota de estatísticas gerais
-app.get('/api/stats', statsController.obterEstatisticasGerais);
 
-// Rota de Auth
-app.post('/api/login', adminController.login.bind(adminController));
+// Rotas Protegidas por JWT (para o Painel Admin)
+app.get('/api/stats', authMiddleware, statsController.obterEstatisticasGerais);
+app.get('/api/keys', authMiddleware, apiKeyController.listarApiKeys);
+app.post('/api/keys/generate', authMiddleware, apiKeyController.gerarApiKey);
+app.delete('/api/keys/:name', authMiddleware, apiKeyController.revogarApiKey);
+app.patch('/api/keys/:name/inativar', authMiddleware, apiKeyController.inativarApiKey);
+app.patch('/api/keys/:name/reativar', authMiddleware, apiKeyController.reativarApiKey);
 
-// Rota 404 para rotas não encontradas
+// Rota 404
 app.use((req, res) => {
     res.status(404).json({ message: 'Rota não encontrada' });
 });
@@ -88,7 +85,7 @@ async function iniciarServidor() {
                 console.log('✅ Admin inicial criado com sucesso');
             } catch (error) {
                 // Admin já existe
-                console.log('ℹ️  Admin já existe ou já foi criado anteriormente');
+                console.log('ℹ️  Admin já existe');
             }
             console.log(`\n✅ Servidor rodando na porta ${PORT}`);
             console.log(`📡 API disponível em: http://localhost:${PORT}/api`);
