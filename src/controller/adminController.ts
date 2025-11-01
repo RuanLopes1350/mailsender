@@ -66,10 +66,16 @@ class AdminController {
                 { expiresIn: '8h' } // Token expira em 8 horas
             );
 
-            // Enviar o token na resposta
+            // Enviar o token e os dados do usuário na resposta
             res.status(200).json({
+                success: true,
                 message: "Login bem sucedido!",
-                token: token // Frontend deve salvar isso
+                token: token,
+                user: {
+                    id: (admin as any)._id,
+                    username: admin.username,
+                    email: admin.username 
+                }
             });
 
         } catch (error) {
