@@ -1,9 +1,17 @@
 version: '3.8'
 
 services:
-  # mailsender:
-  #   image: ruanlopes1350/mailsender:latest
-  #   container_name: mailsender_app
+  mongo:
+    image: mongo:8
+    container_name: mailsender-mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+    # mailsender:
+    #   image: ruanlopes1350/mailsender:latest
+    #   container_name: mailsender_app
 
     # Política de restart - reinicia apenas em caso de falha
     # restart: unless-stopped
@@ -64,25 +72,17 @@ services:
 
     # Definição de redes
 
-  mongo:
-    image: mongo:8
-    container_name: mailsender-mongodb
-    ports:
-      - "27018:27018"
-    volumes:
-      - mongo-data:/data/db
-    command: mongod --quiet --logpath /dev/null
-    restart: always
 
-  
-# networks:
-#   mailsender-network:
-#     driver: bridge
-#     name: mailsender-network
 
-# Definição de volumes (opcional)
+
+    # networks:
+    #   mailsender-network:
+    #     driver: bridge
+    #     name: mailsender-network
+
+    # Definição de volumes (opcional)
 volumes:
   mongo-data:
-  # mailsender-data:
-  #   driver: local
-  #   name: mailsender-data
+    # mailsender-data:
+    #   driver: local
+    #   name: mailsender-data
