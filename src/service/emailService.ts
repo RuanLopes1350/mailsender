@@ -1,5 +1,6 @@
 import EmailRepository from '../repository/emailRepository.js';
 import { IEmail } from '../models/email.js';
+import { IApiKey } from '../models/apiKey.js';
 
 // Service responsável pelas regras de negócio relacionadas aos Emails
 class EmailService {
@@ -68,7 +69,7 @@ class EmailService {
     }
 
     // Busca emails de um usuário específico
-    async buscarEmailsDoUsuario(apiKeyUser: string): Promise<IEmail[]> {
+    async buscarEmailsDoUsuario(apiKeyUser: IApiKey): Promise<IEmail[]> {
         return await this.emailRepository.buscarPorUsuario(apiKeyUser);
     }
 }

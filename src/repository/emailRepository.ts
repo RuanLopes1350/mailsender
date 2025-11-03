@@ -1,3 +1,4 @@
+import { IApiKey } from '../models/apiKey.js';
 import EmailModel, { IEmail } from '../models/email.js';
 
 // Repositório responsável por todas as operações de Emails no banco de dados
@@ -15,7 +16,7 @@ class EmailRepository {
     }
 
     // Busca todos os emails de um usuário específico
-    async buscarPorUsuario(apiKeyUser: string): Promise<IEmail[]> {
+    async buscarPorUsuario(apiKeyUser: IApiKey): Promise<IEmail[]> {
         return await EmailModel.find({ apiKeyUser }).sort({ createdAt: -1 });
     }
 

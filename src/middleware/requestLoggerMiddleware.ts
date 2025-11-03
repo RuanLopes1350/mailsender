@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { RequestWithUser } from './apiKeyMiddleware.js';
 import RequestService from '../service/requestService.js';
+import { IApiKey } from '../models/apiKey.js';
 
 const requestService = new RequestService();
 
@@ -29,6 +30,16 @@ export function requestLoggerMiddleware(
         const responseTime = Date.now() - startTime;
         const statusCode = res.statusCode;
 
+        // Normalize apiKeyUser into a string (id/key/json) because registrarRequisicao expects string | undefined
+        const apiKeyUserString: string | undefined = req.apiKeyUser
+            ? (typeof req.apiKeyUser === 'string'
+                ? req.apiKeyUser
+                : (((req.apiKeyUser as unknown) as { id?: string; _id?: string; key?: string }).id
+                    ?? ((req.apiKeyUser as unknown) as { id?: string; _id?: string; key?: string })._id
+                    ?? ((req.apiKeyUser as unknown) as { id?: string; _id?: string; key?: string }).key
+                    ?? JSON.stringify(req.apiKeyUser)))
+            : undefined;
+
         // Registra a requisição no banco de dados de forma assíncrona
         requestService.registrarRequisicao({
             method,
@@ -37,7 +48,7 @@ export function requestLoggerMiddleware(
             ip,
             userAgent,
             responseTime,
-            apiKeyUser: req.apiKeyUser
+            apiKeyUser: apiKeyUserString
         }).catch(error => {
             console.error('Erro ao registrar requisição:', error);
         });

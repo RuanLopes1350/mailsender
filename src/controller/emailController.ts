@@ -144,8 +144,9 @@ class EmailController {
             }
 
             console.log(`\n📋 Listando emails do usuário: ${req.apiKeyUser}...`);
+            const apiKeyUser = req.apiKeyUser as IApiKey;
 
-            const emails = await this.emailService.buscarEmailsDoUsuario(req.apiKeyUser);
+            const emails = await this.emailService.buscarEmailsDoUsuario(apiKeyUser);
             console.log(`   ✓ ${emails.length} email(s) encontrado(s)`);
 
             res.json(emails);
