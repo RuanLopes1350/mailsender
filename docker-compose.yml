@@ -66,11 +66,11 @@ services:
 
   mongo:
     image: mongo:8
-    container_name: eventos-mongodb
+    container_name: mailsender-mongodb
     ports:
-      - "27017:27017"
+      - "27018:27018"
     volumes:
-      - mongo-data-dev:/data/db
+      - mongo-data:/data/db
     command: mongod --quiet --logpath /dev/null
     restart: always
 
@@ -81,7 +81,8 @@ services:
 #     name: mailsender-network
 
 # Definição de volumes (opcional)
-# volumes:
-#   mailsender-data:
-#     driver: local
-#     name: mailsender-data
+volumes:
+  mongo-data:
+  # mailsender-data:
+  #   driver: local
+  #   name: mailsender-data
