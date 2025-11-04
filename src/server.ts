@@ -56,6 +56,7 @@ app.delete('/api/keys/:name', authMiddleware, apiKeyController.revogarApiKey);
 app.patch('/api/keys/:name/inativar', authMiddleware, apiKeyController.inativarApiKey);
 app.patch('/api/keys/:name/reativar', authMiddleware, apiKeyController.reativarApiKey);
 app.get('/api/emails/recentes', authMiddleware, emailController.listarEmailsRecentes);
+app.get('/api/admin/listar', authMiddleware, adminController.listarAdmins.bind(adminController));
 
 // Rotas Protegidas por API Key (para Desenvolvedores)
 app.post('/api/emails/send', apiKeyMiddleware, emailController.enviarEmail);

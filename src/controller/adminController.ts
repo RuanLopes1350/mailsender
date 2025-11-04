@@ -92,6 +92,18 @@ class AdminController {
             }
         }
     }
+
+    async listarAdmins(req: Request, res: Response): Promise<void> {
+        try {
+            const admins: IAdmin[] = await this.service.listarAdmins();
+            res.status(200).json(admins);
+        } catch (error) {
+            console.error('Erro ao listar admins:', error);
+            res.status(500).json({
+                message: "Erro ao listar admins. Tente novamente mais tarde."
+            });
+        }
+    }
 }
 
 export default AdminController;

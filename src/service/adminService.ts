@@ -16,6 +16,10 @@ class AdminService {
     async criarAdmin(username: string, password: string): Promise<IAdmin> { 
         return await this.repository.criarAdmin(username, password)
     }
+
+    async listarAdmins(): Promise<IAdmin[]> {
+        return await this.repository.listarAdmins()
+    }
 }
 
 export default AdminService

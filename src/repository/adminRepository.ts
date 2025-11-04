@@ -33,6 +33,10 @@ class AdminRepository {
         }
         return admin;
     }
+
+    async listarAdmins(): Promise<IAdmin[]> {
+        return this.model.find();
+    }
 }
 
 export default AdminRepository;
