@@ -104,6 +104,34 @@ class AdminController {
             });
         }
     }
+
+    async criarAdmin(req: Request, res: Response): Promise<void> {
+        try {
+            const { username, password } = req.body;
+
+            // Validação de entrada
+            if (!username || !password) {
+                res.status(400).json({
+                    message: "Username e password são obrigatórios"
+                });
+                return;
+            }
+
+            const novoAdmin = await this.service.criarAdmin(username, password);
+            res.status(201).json({
+                message: "Admin criado com sucesso",
+                admin: {
+                    id: (novoAdmin as any)._id,
+                    username: novoAdmin.username
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao criar admin:', error);
+            res.status(500).json({
+                message: "Erro ao criar admin. Tente novamente mais tarde."
+            });
+        }
+    }
 }
 
 export default AdminController;
