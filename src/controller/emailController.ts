@@ -5,6 +5,10 @@ import EmailSenderService from '../service/emailSenderService.js';
 import ApiKeyService from '../service/apiKeyService.js';
 import { IApiKey } from '../models/apiKey.js';
 
+const ServidoresValidos = process.env.SERVIDORES_VALIDOS
+    ? process.env.SERVIDORES_VALIDOS.split(',').map(s => s.trim())
+    : [];
+
 // Controller responsável por gerenciar as requisições relacionadas aos Emails
 class EmailController {
     private emailService: EmailService;
@@ -35,6 +39,28 @@ class EmailController {
                     message: 'Campos obrigatórios: to, subject, template'
                 });
                 return;
+            }
+
+            // Validação do formato do email
+            if (!to.includes('@')) {
+                console.log(`   ❌ Email inválido (sem @)`);
+                res.status(400).json({
+                    message: 'Email inválido'
+                });
+                return;
+            }
+
+            // Validação do domínio (apenas se houver servidores válidos configurados)
+            if (ServidoresValidos.length > 0) {
+                const dominio = to.split('@')[1];
+                if (!ServidoresValidos.includes(dominio)) {
+                    console.log(`   ❌ Domínio de email inválido: ${dominio}`);
+                    res.status(400).json({
+                        message: 'Domínio de email não permitido',
+                        dominiosPermitidos: ServidoresValidos
+                    });
+                    return;
+                }
             }
 
             const apiKeyUser = req.apiKeyUser ? String(req.apiKeyUser) : 'unknown';
