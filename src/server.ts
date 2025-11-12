@@ -11,6 +11,8 @@ import cors from 'cors';
 import AdminController from './controller/adminController.js';
 import AdminService from './service/adminService.js';
 import { authMiddleware } from './middleware/authMiddleware.js';
+import ConfigController from './controller/configController.js';
+import ConfigService from './service/configService.js';
 
 // Carrega variáveis de ambiente
 dotenv.config();
@@ -21,6 +23,9 @@ const password: string = process.env.ADMIN_PASSWORD || 'admin123';
 
 // Cria o admin inicial se não existir
 const adminService = new AdminService();
+
+// Cria a configuração inicial se não existir
+const configService = new ConfigService();
 
 // Registra o tempo de início do servidor
 (global as any).serverStartTime = Date.now();
@@ -38,6 +43,7 @@ const apiKeyController = new ApiKeyController();
 const emailController = new EmailController();
 const statsController = new StatsController();
 const adminController = new AdminController();
+const configController = new ConfigController();
 
 // Painel de administração (arquivos estáticos)
 app.use('/painel', express.static(path.resolve('public')));
@@ -59,6 +65,8 @@ app.post('api/keys/nova', authMiddleware, apiKeyController.gerarApiKey);
 app.get('/api/emails/recentes', authMiddleware, emailController.listarEmailsRecentes);
 app.get('/api/admin/listar', authMiddleware, adminController.listarAdmins.bind(adminController));
 app.post('/api/admin/criar', authMiddleware, adminController.criarAdmin.bind(adminController));
+app.get('/api/config', authMiddleware, configController.obterConfig.bind(configController));
+app.post('/api/config/aprovar', authMiddleware, configController.aprovarApiKey.bind(configController));
 
 // Rotas Protegidas por API Key (para Desenvolvedores)
 app.post('/api/emails/send', apiKeyMiddleware, emailController.enviarEmail);
@@ -88,6 +96,14 @@ async function iniciarServidor() {
             } catch (error) {
                 // Admin já existe
                 console.log('ℹ️  Admin já existe');
+            }
+
+            try {
+                await configService.criarConfigInicial();
+                console.log('✅ Configuração inicial criada com sucesso');
+            } catch (error) {
+                // Configuração já existe
+                console.log('ℹ️  Configuração já existe');
             }
             console.log(`\n✅ Servidor rodando na porta ${PORT}`);
             console.log(`📡 API disponível em: http://localhost:${PORT}/api`);

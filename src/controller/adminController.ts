@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import AdminService from "../service/adminService.js";
 import { Request, Response } from "express";
 import { IAdmin } from "../models/admin.js";

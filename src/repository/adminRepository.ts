@@ -23,7 +23,7 @@ class AdminRepository {
     }
 
     async alterarSenha(username: string, newPassword: string): Promise<IAdmin> {
-        const admin = await this.model.findOneAndUpdate(
+        const admin = await this.model.findByIdAndUpdate(
             { username },
             { password: newPassword },
             { new: true }
