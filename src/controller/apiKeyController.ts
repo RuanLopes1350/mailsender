@@ -16,20 +16,21 @@ class ApiKeyController {
             const { name = 'semNome', email, pass } = req.body ?? {};
             console.log(`\n🔐 Requisição para gerar API Key`);
             console.log(`   Nome: ${name}`);
-            
-            const apiKey = await this.apiKeyService.gerarApiKey(name, email, pass);
-            
+
+            const result = await this.apiKeyService.gerarApiKey(name, email, pass);
+
             console.log(`   ✅ Chave gerada com sucesso`);
             res.status(201).json({
                 name,
                 message: 'Chave criada – salve em local seguro (não será mostrada de novo)',
-                apiKey
+                apiKey: result.apiKey,
+                isActive: result.isActive
             });
         } catch (erro) {
             console.error(`   ❌ Erro ao gerar chave:`, erro);
-            res.status(500).json({ 
-                message: 'Falha ao gerar chave', 
-                error: (erro as Error).message 
+            res.status(500).json({
+                message: 'Falha ao gerar chave',
+                error: (erro as Error).message
             });
         }
     };
@@ -43,9 +44,9 @@ class ApiKeyController {
             res.json(keys);
         } catch (error) {
             console.error(`   ❌ Erro ao listar chaves:`, error);
-            res.status(500).json({ 
-                message: 'Erro ao listar chaves', 
-                error: (error as Error).message 
+            res.status(500).json({
+                message: 'Erro ao listar chaves',
+                error: (error as Error).message
             });
         }
     };
@@ -55,9 +56,9 @@ class ApiKeyController {
         try {
             const { name } = req.params;
             console.log(`\n🗑️  Requisição para revogar API Key: ${name}`);
-            
+
             const removida = await this.apiKeyService.revogarApiKey(name);
-            
+
             if (removida) {
                 console.log(`   ✅ Chave revogada com sucesso`);
                 res.json({ message: 'Chave revogada com sucesso' });
@@ -67,9 +68,9 @@ class ApiKeyController {
             }
         } catch (error) {
             console.error(`   ❌ Erro ao revogar chave:`, error);
-            res.status(500).json({ 
-                message: 'Erro ao revogar chave', 
-                error: (error as Error).message 
+            res.status(500).json({
+                message: 'Erro ao revogar chave',
+                error: (error as Error).message
             });
         }
     };
@@ -79,9 +80,9 @@ class ApiKeyController {
         try {
             const { name } = req.params;
             console.log(`\n⏸️  Requisição para inativar API Key: ${name}`);
-            
+
             const inativada = await this.apiKeyService.inativarApiKey(name);
-            
+
             if (inativada) {
                 console.log(`   ✅ Chave inativada com sucesso`);
                 res.json({ message: 'Chave inativada com sucesso' });
@@ -91,9 +92,9 @@ class ApiKeyController {
             }
         } catch (error) {
             console.error(`   ❌ Erro ao inativar chave:`, error);
-            res.status(500).json({ 
-                message: 'Erro ao inativar chave', 
-                error: (error as Error).message 
+            res.status(500).json({
+                message: 'Erro ao inativar chave',
+                error: (error as Error).message
             });
         }
     };
@@ -103,9 +104,9 @@ class ApiKeyController {
         try {
             const { name } = req.params;
             console.log(`\n▶️  Requisição para reativar API Key: ${name}`);
-            
+
             const reativada = await this.apiKeyService.reativarApiKey(name);
-            
+
             if (reativada) {
                 console.log(`   ✅ Chave reativada com sucesso`);
                 res.json({ message: 'Chave reativada com sucesso' });
@@ -115,9 +116,9 @@ class ApiKeyController {
             }
         } catch (error) {
             console.error(`   ❌ Erro ao reativar chave:`, error);
-            res.status(500).json({ 
-                message: 'Erro ao reativar chave', 
-                error: (error as Error).message 
+            res.status(500).json({
+                message: 'Erro ao reativar chave',
+                error: (error as Error).message
             });
         }
     };
