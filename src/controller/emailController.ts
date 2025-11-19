@@ -48,7 +48,7 @@ class EmailController {
 
             // Extrai o domínio do email
             const dominio = to.substring(to.lastIndexOf("@") + 1);
-            
+
             // Validação do domínio - APENAS servidores válidos são permitidos
             if (!ServidoresValidos.includes(dominio)) {
                 console.log(`Domínio de email não permitido: ${dominio}`);
@@ -65,10 +65,10 @@ class EmailController {
 
             const apiKeyUser = req.apiKeyUser ? String(req.apiKeyUser) : 'unknown';
             const apiKeyFromHeader = req.headers['x-api-key'] as string;
-            
+
             // Busca credenciais
             const credentials = await this.apiKeyService.obterUsuarioPorApiKey(apiKeyFromHeader);
-            
+
             if (!credentials) {
                 res.status(401).json({ message: 'Credenciais não encontradas' });
                 return;
@@ -77,6 +77,7 @@ class EmailController {
             // 1. Registra o email no banco como 'pending' IMEDIATAMENTE
             const emailId = await this.emailService.registrarEmail({
                 to,
+                sender: credentials.email,
                 subject,
                 template,
                 data,

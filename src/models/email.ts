@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 // Interface que representa um email no sistema
 export interface IEmail extends Document {
     to: string;
+    sender: string;
     subject: string;
     template: string;
     data: Record<string, any>;
@@ -17,6 +18,10 @@ export interface IEmail extends Document {
 // Schema do Mongoose para Emails
 const emailSchema = new Schema<IEmail>({
     to: { 
+        type: String, 
+        required: true 
+    },
+    sender: { 
         type: String, 
         required: true 
     },

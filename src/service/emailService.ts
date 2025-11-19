@@ -13,6 +13,7 @@ class EmailService {
     // Registra um novo email no banco de dados
     async registrarEmail(emailData: {
         to: string;
+        sender: string;
         subject: string;
         template: string;
         data: Record<string, any>;
@@ -29,7 +30,7 @@ class EmailService {
 
         const emailId = email._id!.toString();
         console.log(`   ✓ Registro criado com sucesso (ID: ${emailId})`);
-        
+
         return emailId;
     }
 
@@ -40,15 +41,15 @@ class EmailService {
         erro?: string
     ): Promise<boolean> {
         console.log(`   📊 Atualizando status do email ${emailId} para '${status}'...`);
-        
+
         const atualizado = await this.emailRepository.atualizarStatus(emailId, status, erro);
-        
+
         if (atualizado) {
             console.log(`   ✓ Status atualizado no banco de dados`);
         } else {
             console.log(`   ⚠️ Falha ao atualizar status no banco`);
         }
-        
+
         return atualizado;
     }
 
