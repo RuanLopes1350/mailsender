@@ -13,6 +13,7 @@ import AdminService from './service/adminService.js';
 import { authMiddleware } from './middleware/authMiddleware.js';
 import ConfigController from './controller/configController.js';
 import ConfigService from './service/configService.js';
+import './utils/workers/emailWorker.js';
 
 // Carrega variáveis de ambiente
 dotenv.config();

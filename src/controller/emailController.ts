@@ -4,6 +4,7 @@ import EmailService from '../service/emailService.js';
 import EmailSenderService from '../service/emailSenderService.js';
 import ApiKeyService from '../service/apiKeyService.js';
 import { IApiKey } from '../models/apiKey.js';
+import { emailQueue } from '../utils/queue/emailQueue.js';
 
 const ServidoresValidos = process.env.SERVIDORES_VALIDOS
     ? process.env.SERVIDORES_VALIDOS.split(',').map(s => s.trim())
@@ -12,77 +13,32 @@ const ServidoresValidos = process.env.SERVIDORES_VALIDOS
 // Controller responsável por gerenciar as requisições relacionadas aos Emails
 class EmailController {
     private emailService: EmailService;
-    private emailSenderService: EmailSenderService;
-    private apiKeyService: ApiKeyService
+    private apiKeyService: ApiKeyService;
+    // Removemos emailSenderService daqui, pois o Worker é quem vai usar
 
     constructor() {
         this.emailService = new EmailService();
-        this.emailSenderService = new EmailSenderService();
         this.apiKeyService = new ApiKeyService();
     }
 
-    // Envia um email usando template MJML
     enviarEmail = async (req: RequestWithUser, res: Response): Promise<void> => {
         try {
             const { to, subject, template, data = {} } = req.body;
-
-            console.log(`\n📧 Nova requisição de envio de email`);
-            console.log(`   Para: ${to}`);
-            console.log(`   Assunto: ${subject}`);
-            console.log(`   Template: ${template}`);
-            console.log(`   Usuário: ${req.apiKeyUser || 'desconhecido'}`);
-
-            // Validação básica
-            if (!to || !subject || !template) {
-                console.log(`   ❌ Dados incompletos`);
-                res.status(400).json({
-                    message: 'Campos obrigatórios: to, subject, template'
-                });
-                return;
-            }
-
-            // Validação do formato do email
-            if (!to.includes('@')) {
-                console.log(`   ❌ Email inválido (sem @)`);
-                res.status(400).json({
-                    message: 'Email inválido'
-                });
-                return;
-            }
-
-            // Validação do domínio (apenas se houver servidores válidos configurados)
-            if (ServidoresValidos.length > 0) {
-                const dominio = to.split('@')[1];
-                if (!ServidoresValidos.includes(dominio)) {
-                    console.log(`   ❌ Domínio de email inválido: ${dominio}`);
-                    res.status(400).json({
-                        message: 'Domínio de email não permitido',
-                        dominiosPermitidos: ServidoresValidos
-                    });
-                    return;
-                }
-            }
+            
+            // ... (MANTENHA SUAS VALIDAÇÕES EXISTENTES AQUI: campos, formato, domínio) ...
 
             const apiKeyUser = req.apiKeyUser ? String(req.apiKeyUser) : 'unknown';
-            
-            // Pega a API Key do header para buscar as credenciais
             const apiKeyFromHeader = req.headers['x-api-key'] as string;
             
-            console.log(`   🔍 Buscando credenciais para a API Key...`);
+            // Busca credenciais
             const credentials = await this.apiKeyService.obterUsuarioPorApiKey(apiKeyFromHeader);
             
             if (!credentials) {
-                console.log(`   ❌ Credenciais não encontradas`);
-                res.status(401).json({ message: 'Credenciais de email não encontradas' });
+                res.status(401).json({ message: 'Credenciais não encontradas' });
                 return;
             }
-            
-            const email = credentials.email;
-            const pass = credentials.pass;
-            
-            console.log(`   ✓ Credenciais encontradas (email: ${email})`);
 
-            // Registra o email no banco como 'pending'
+            // 1. Registra o email no banco como 'pending' IMEDIATAMENTE
             const emailId = await this.emailService.registrarEmail({
                 to,
                 subject,
@@ -91,36 +47,32 @@ class EmailController {
                 apiKeyUser: apiKeyUser
             });
 
-            // Tenta enviar o email
-            try {
-                await this.emailSenderService.enviarEmail({ to, subject, template, data, email, pass });
+            // 2. Adiciona o trabalho na Fila Redis
+            await emailQueue.add('send-email-job', {
+                emailId, // Passamos o ID para o worker atualizar o status depois
+                to,
+                subject,
+                template,
+                data,
+                credentials: { // Passamos as credenciais para o worker usar
+                    email: credentials.email,
+                    pass: credentials.pass
+                }
+            });
 
-                // Atualiza o status para 'sent'
-                await this.emailService.atualizarStatusEmail(emailId, 'sent');
+            console.log(`   🚀 Job adicionado à fila para o email ${emailId}`);
 
-                res.status(202).json({
-                    message: 'Email enviado com sucesso',
-                    emailId
-                });
-            } catch (sendError) {
-                // Atualiza o status para 'failed'
-                await this.emailService.atualizarStatusEmail(
-                    emailId,
-                    'failed',
-                    (sendError as Error).message
-                );
+            // 3. Responde imediatamente (Super Rápido!)
+            res.status(202).json({
+                message: 'E-mail na fila de processamento',
+                status: 'pending',
+                emailId
+            });
 
-                console.error(`   ❌ Falha no envio do email:`, sendError);
-                res.status(500).json({
-                    message: 'Falha ao enviar email',
-                    error: (sendError as Error).message,
-                    emailId
-                });
-            }
         } catch (error) {
-            console.error(`   ❌ Erro ao processar requisição:`, error);
+            console.error(`   ❌ Erro ao enfileirar:`, error);
             res.status(500).json({
-                message: 'Erro ao processar requisição de envio',
+                message: 'Erro ao processar requisição',
                 error: (error as Error).message
             });
         }

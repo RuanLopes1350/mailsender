@@ -9,6 +9,12 @@ services:
     volumes:
       - mongo-data:/data/db
     restart: always
+  redis:
+    image: redis:alpine
+    container_name: mailsender-redis
+    ports:
+      - "6379:6379"
+    restart: always
     # mailsender:
     #   image: ruanlopes1350/mailsender:latest
     #   container_name: mailsender_app
