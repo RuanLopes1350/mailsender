@@ -6,7 +6,7 @@ async function enviarEmail() {
       'x-api-key': '' // <- sua chave de API dentro das aspas simples
     },
     body: JSON.stringify({
-      to: 'intel.spec.lopes@gmail.com', // <- email de destinatário
+      to: '', // <- email de destinatário
       subject: 'Bem-vindo!', // <- assunto do email
       template: 'generico', // <- template usado (pode ser encontrado a lista no Repositório)
       // aqui são os campos do template que escolheu
