@@ -77,7 +77,6 @@ class EmailSenderService {
     // Envia um email usando template MJML
     async enviarEmail({ email, pass, to, subject, template, data = {} }: EnviarEmailParams): Promise<any> {
         try {
-            // ... (Lógica de template MJML permanece igual) ...
             const mjmlPath = path.join(TEMPLATE_DIR, `${template}.mjml`);
             const rawMjml = await fs.readFile(mjmlPath, 'utf8');
             const mjmlWithData = handlebars.compile(rawMjml)(data);
