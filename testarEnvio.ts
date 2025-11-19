@@ -3,7 +3,7 @@ async function enviarEmail() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': '875d4e59329bd18ffe444f6040fa9610ac4f762184c6dcc5cedec187e19714fc' // <- sua chave de API dentro das aspas simples
+      'x-api-key': '' // <- sua chave de API dentro das aspas simples
     },
     body: JSON.stringify({
       to: 'intel.spec.lopes@gmail.com', // <- email de destinatário
