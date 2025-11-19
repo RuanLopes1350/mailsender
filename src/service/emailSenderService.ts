@@ -19,62 +19,75 @@ interface EnviarEmailParams {
     data?: Record<string, any>;
 }
 
-// Service responsável pelo envio efetivo de emails
 class EmailSenderService {
-    private transporter: nodemailer.Transporter | null = null;
+    // 1. Criamos um Map estático ou de instância para guardar os transporters ativos
+    // Chave: email do remetente, Valor: Instância do Transporter
+    private transporters = new Map<string, nodemailer.Transporter>();
 
     // Obtém ou cria o transporter do Nodemailer
     private async obterTransporter(email: string, pass: string): Promise<nodemailer.Transporter> {
-        // ❌ NÃO reutilize o transporter - cada usuário tem credenciais diferentes!
-        // Sempre cria um novo transporter com as credenciais específicas
         
-        console.log(`   🔐 Criando transporter com:`);
-        console.log(`      Email: ${email}`);
-        console.log(`      Senha: ${pass ? '***' + pass.slice(-4) : 'UNDEFINED'}`);
+        // 2. Verifica se já temos um transporter ativo para este email
+        if (this.transporters.has(email)) {
+            console.log(`   ⚡ Reutilizando conexão SMTP para: ${email}`);
+            return this.transporters.get(email)!;
+        }
 
+        console.log(`   🔐 Criando NOVA conexão (Pool) para: ${email}`);
+        // console.log(`      Senha: ${pass ? '***' + pass.slice(-4) : 'UNDEFINED'}`);
+
+        // 3. Configura com pool: true
         const transporter = nodemailer.createTransport({
             service: 'gmail',
+            pool: true, // <--- Habilita o uso de pool
+            maxConnections: 5, // Máximo de conexões simultâneas por usuário
+            maxMessages: 100, // Reinicia conexão após 100 envios (bom para Gmail)
+            rateDelta: 1000, // Janela de tempo para rate limit
+            rateLimit: 5, // Máximo de 5 mensagens por segundo (evita bloqueio do Gmail)
             auth: {
                 user: email,
                 pass: pass
             }
         });
 
+        // Verifica a conexão antes de salvar no cache (opcional, mas recomendado)
+        try {
+            await transporter.verify();
+            // 4. Salva no cache
+            this.transporters.set(email, transporter);
+        } catch (error) {
+            console.error(`   ❌ Falha ao autenticar SMTP para ${email}:`, error);
+            throw error;
+        }
+
         return transporter;
+    }
+
+    // Método para limpar conexões inativas (útil para não estourar memória se tiver muitos usuários)
+    public limparTransportersInativos() {
+        this.transporters.forEach((transporter, email) => {
+            if (transporter.isIdle()) {
+                transporter.close();
+                this.transporters.delete(email);
+                console.log(`   🧹 Conexão inativa fechada para: ${email}`);
+            }
+        });
     }
 
     // Envia um email usando template MJML
     async enviarEmail({ email, pass, to, subject, template, data = {} }: EnviarEmailParams): Promise<any> {
         try {
-            console.log(`   📄 [1/4] Carregando template '${template}.mjml'...`);
-            
-            // 1. Lê o arquivo MJML
+            // ... (Lógica de template MJML permanece igual) ...
             const mjmlPath = path.join(TEMPLATE_DIR, `${template}.mjml`);
             const rawMjml = await fs.readFile(mjmlPath, 'utf8');
-            console.log(`   ✓ Template carregado (${rawMjml.length} caracteres)`);
-
-            console.log(`   🔧 [2/4] Compilando template com Handlebars...`);
-            // 2. Compila Handlebars com os dados
             const mjmlWithData = handlebars.compile(rawMjml)(data);
-            console.log(`   ✓ Template compilado com dados`);
-
-            console.log(`   🎨 [3/4] Convertendo MJML para HTML...`);
-            // 3. Converte MJML para HTML
             const { html, errors } = mjml2html(mjmlWithData, { validationLevel: 'soft' });
             
-            if (errors.length) {
-                console.warn(`   ⚠️ MJML validation warnings:`, errors);
-            } else {
-                console.log(`   ✓ HTML gerado (${html.length} caracteres)`);
-            }
+            if (errors.length) console.warn(`   ⚠️ MJML validation warnings:`, errors);
 
-            console.log(`   📮 [4/4] Enviando email via transporte...`);
-            console.log(`   De: ${email}`);
-            console.log(`   Para: ${to}`);
-            console.log(`   Assunto: ${subject}`);
-            
-            // 4. Envia o email
+            // 5. Obtém o transporter (agora com cache)
             const transporter = await this.obterTransporter(email, pass);
+            
             const info = await transporter.sendMail({
                 from: email,
                 to,
@@ -82,15 +95,13 @@ class EmailSenderService {
                 html
             });
             
-            console.log(`   ✅ Email enviado com sucesso!`);
-            console.log(`   Message ID: ${info.messageId}`);
-            console.log(`   Response: ${info.response}`);
-
             return info;
         } catch (error) {
-            console.error(`   ❌ Erro durante o envio do email:`);
-            console.error(`   Tipo: ${(error as Error).name}`);
-            console.error(`   Mensagem: ${(error as Error).message}`);
+            // Se der erro de autenticação, remove do cache para forçar recriação na próxima
+            // caso a senha tenha mudado
+            this.transporters.delete(email); 
+            
+            console.error(`   ❌ Erro durante o envio do email: ${(error as Error).message}`);
             throw error;
         }
     }
