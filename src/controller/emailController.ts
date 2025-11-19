@@ -10,11 +10,9 @@ const ServidoresValidos = process.env.SERVIDORES_VALIDOS
     ? process.env.SERVIDORES_VALIDOS.split(',').map(s => s.trim())
     : [];
 
-// Controller responsável por gerenciar as requisições relacionadas aos Emails
 class EmailController {
     private emailService: EmailService;
     private apiKeyService: ApiKeyService;
-    // Removemos emailSenderService daqui, pois o Worker é quem vai usar
 
     constructor() {
         this.emailService = new EmailService();
@@ -24,8 +22,46 @@ class EmailController {
     enviarEmail = async (req: RequestWithUser, res: Response): Promise<void> => {
         try {
             const { to, subject, template, data = {} } = req.body;
+
+            console.log(`\n Nova requisição de envio de email`);
+            console.log(`   Para: ${to}`);
+            console.log(`   Assunto: ${subject}`);
+            console.log(`   Template: ${template}`);
+
+            // Validação básica
+            if (!to || !subject || !template) {
+                console.log(`Dados incompletos`);
+                res.status(400).json({
+                    message: 'Campos obrigatórios: to, subject, template'
+                });
+                return;
+            }
+
+            // Validação do formato do email
+            if (!to.includes('@')) {
+                console.log(`Email inválido (formato incorreto)`);
+                res.status(400).json({
+                    message: 'Email inválido'
+                });
+                return;
+            }
+
+            // Extrai o domínio do email
+            const dominio = to.substring(to.lastIndexOf("@") + 1);
             
-            // ... (MANTENHA SUAS VALIDAÇÕES EXISTENTES AQUI: campos, formato, domínio) ...
+            // Validação do domínio - APENAS servidores válidos são permitidos
+            if (!ServidoresValidos.includes(dominio)) {
+                console.log(`Domínio de email não permitido: ${dominio}`);
+                console.log(`Domínios válidos: ${ServidoresValidos.join(', ')}`);
+                res.status(400).json({
+                    message: 'Domínio de email não permitido',
+                    dominio: dominio,
+                    dominiosPermitidos: ServidoresValidos
+                });
+                return;
+            }
+
+            console.log(`   ✓ Domínio válido: ${dominio}`);
 
             const apiKeyUser = req.apiKeyUser ? String(req.apiKeyUser) : 'unknown';
             const apiKeyFromHeader = req.headers['x-api-key'] as string;
@@ -60,7 +96,7 @@ class EmailController {
                 }
             });
 
-            console.log(`   🚀 Job adicionado à fila para o email ${emailId}`);
+            console.log(`Job adicionado à fila para o email ${emailId}`);
 
             // 3. Responde imediatamente (Super Rápido!)
             res.status(202).json({
@@ -70,7 +106,7 @@ class EmailController {
             });
 
         } catch (error) {
-            console.error(`   ❌ Erro ao enfileirar:`, error);
+            console.error(`Erro ao enfileirar:`, error);
             res.status(500).json({
                 message: 'Erro ao processar requisição',
                 error: (error as Error).message

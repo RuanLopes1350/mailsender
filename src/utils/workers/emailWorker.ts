@@ -12,7 +12,7 @@ const worker = new Worker(
   async (job: Job) => {
     const { emailId, to, subject, template, data, credentials } = job.data;
 
-    console.log(`👷 [Worker] Processando email ID: ${emailId}`);
+    console.log(`[Worker] Processando email ID: ${emailId}`);
 
     try {
       // 1. Tenta enviar o email (Nodemailer + MJML)
@@ -28,14 +28,14 @@ const worker = new Worker(
 
       // 2. Se deu certo, atualiza o status no Mongo
       await emailService.atualizarStatusEmail(emailId, 'sent');
-      console.log(`✅ [Worker] Email ${emailId} enviado com sucesso!`);
+      console.log(`[Worker] Email ${emailId} enviado com sucesso!`);
       
       return { success: true };
 
     } catch (error) {
       // 3. Se deu erro, atualiza status para failed
       const errorMessage = (error as Error).message;
-      console.error(`❌ [Worker] Falha ao enviar ${emailId}:`, errorMessage);
+      console.error(`[Worker] Falha ao enviar ${emailId}:`, errorMessage);
       
       await emailService.atualizarStatusEmail(emailId, 'failed', errorMessage);
       
@@ -50,11 +50,11 @@ const worker = new Worker(
 );
 
 worker.on('completed', (job) => {
-  console.log(`🎉 Job ${job.id} completado!`);
+  console.log(`Job ${job.id} completado!`);
 });
 
 worker.on('failed', (job, err) => {
-  console.log(`🔥 Job ${job?.id} falhou: ${err.message}`);
+  console.log(`Job ${job?.id} falhou: ${err.message}`);
 });
 
 export default worker;

@@ -8,7 +8,7 @@ export const emailQueue = new Queue('email-sending', {
     attempts: 3, // Tenta reenviar 3 vezes se falhar
     backoff: {
       type: 'exponential',
-      delay: 5000, // Espera 5s, 10s, 20s entre tentativas
+      delay: 5000, // Espera 5s entre tentativas
     },
     removeOnComplete: true, // Remove job da memória após sucesso
     removeOnFail: false, // Mantém logs de erro
