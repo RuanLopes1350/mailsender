@@ -16,7 +16,7 @@ class ApiKeyRepository {
 
     // Busca todas as API Keys ativas
     async buscarTodas(): Promise<IApiKey[]> {
-        return await ApiKeyModel.find({ isActive: true });
+        return await ApiKeyModel.find({ isActive: true, }).sort({ lastUsed: -1 });
     }
 
     // Atualiza a data do último uso de uma API Key
@@ -60,7 +60,7 @@ class ApiKeyRepository {
 
     // Lista todas as API Keys (incluindo inativas) para administração
     async listarTodas(): Promise<IApiKey[]> {
-        return await ApiKeyModel.find({}).sort({ createdAt: -1 });
+        return await ApiKeyModel.find({}).sort({ lastUsed: -1 });
     }
 }
 
