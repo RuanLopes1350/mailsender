@@ -12,7 +12,7 @@ class EmailRepository {
 
     // Busca um email por ID
     async buscarPorId(id: string): Promise<IEmail | null> {
-        return await EmailModel.findById(id);
+        return await EmailModel.findById(id).populate('apiKeyUser');
     }
 
     // Busca todos os emails de um usuário específico
@@ -22,7 +22,7 @@ class EmailRepository {
 
     // Busca emails recentes (limitado)
     async buscarRecentes(limite: number = 10): Promise<IEmail[]> {
-        return await EmailModel.find({}).sort({ createdAt: -1 }).limit(limite);
+        return await EmailModel.find({}).sort({ createdAt: -1 }).limit(limite).populate('apiKeyUser');
     }
 
     // Atualiza o status de um email
