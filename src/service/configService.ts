@@ -1,5 +1,4 @@
-import ConfigRepository from "../repository/configRepository";
-import { IConfig } from "../models/config";
+import ConfigRepository from "../repository/configRepository.js";
 
 class ConfigService {
     private repository: ConfigRepository;

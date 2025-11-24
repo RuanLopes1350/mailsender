@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import ConfigModel, { IConfig } from "../models/config";
+import ConfigModel, { IConfig } from "../models/config.js";
 
 class ConfigRepository {
     private model: mongoose.Model<IConfig>;

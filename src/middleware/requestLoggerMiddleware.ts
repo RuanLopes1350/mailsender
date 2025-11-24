@@ -1,7 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { RequestWithUser } from './apiKeyMiddleware.js';
 import RequestService from '../service/requestService.js';
-import { IApiKey } from '../models/apiKey.js';
 
 const requestService = new RequestService();
 

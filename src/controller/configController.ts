@@ -1,6 +1,5 @@
 import ConfigService from "../service/configService.js";
 import { Request, Response } from "express";
-import { IConfig } from "../models/config.js";
 import dotenv from 'dotenv';
 
 dotenv.config();
