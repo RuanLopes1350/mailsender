@@ -1,6 +1,7 @@
 import EmailRepository from '../repository/emailRepository.js';
 import { IEmail } from '../models/email.js';
 import { IApiKey } from '../models/apiKey.js';
+import { Document } from 'mongoose';
 
 // Service responsável pelas regras de negócio relacionadas aos Emails
 class EmailService {
@@ -17,12 +18,17 @@ class EmailService {
         subject: string;
         template: string;
         data: Record<string, any>;
-        apiKeyUser: string;
+        apiKeyUser: IApiKey | Document;
     }): Promise<string> {
         console.log(`   📝 Preparando registro do email...`);
 
         const email = await this.emailRepository.criar({
-            ...emailData,
+            to: emailData.to,
+            sender: emailData.sender,
+            subject: emailData.subject,
+            template: emailData.template,
+            data: emailData.data,
+            apiKeyUser: emailData.apiKeyUser,
             status: 'pending',
             createdAt: new Date(),
             updatedAt: new Date()

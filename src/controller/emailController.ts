@@ -63,7 +63,6 @@ class EmailController {
 
             console.log(`   ✓ Domínio válido: ${dominio}`);
 
-            const apiKeyUser = req.apiKeyUser ? String(req.apiKeyUser) : 'unknown';
             const apiKeyFromHeader = req.headers['x-api-key'] as string;
 
             // Busca credenciais
@@ -81,7 +80,7 @@ class EmailController {
                 subject,
                 template,
                 data,
-                apiKeyUser: apiKeyUser
+                apiKeyUser: req.apiKeyUser || credentials
             });
 
             // 2. Adiciona o trabalho na Fila Redis
@@ -99,7 +98,7 @@ class EmailController {
 
             console.log(`Job adicionado à fila para o email ${emailId}`);
 
-            // 3. Responde imediatamente (Super Rápido!)
+            // 3. Responde imediatamente
             res.status(202).json({
                 message: 'E-mail na fila de processamento',
                 status: 'pending',

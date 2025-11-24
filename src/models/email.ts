@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { IApiKey } from './apiKey';
 
 // Interface que representa um email no sistema
 export interface IEmail extends Document {
@@ -8,7 +9,7 @@ export interface IEmail extends Document {
     template: string;
     data: Record<string, any>;
     status: 'sent' | 'failed' | 'pending';
-    apiKeyUser: string;
+    apiKeyUser: IApiKey | Document;
     sentAt?: Date;
     error?: string;
     createdAt: Date;
@@ -44,9 +45,10 @@ const emailSchema = new Schema<IEmail>({
         index: true 
     },
     apiKeyUser: { 
-        type: String, 
+        type: Schema.Types.ObjectId,
+        ref: 'ApiKey',
         required: true,
-        index: true 
+        index: true
     },
     sentAt: { 
         type: Date 
