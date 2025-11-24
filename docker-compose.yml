@@ -9,84 +9,68 @@ services:
     volumes:
       - mongo-data:/data/db
     restart: always
+    networks:
+      - mailsender-network
   redis:
     image: redis:alpine
     container_name: mailsender-redis
     ports:
       - "6379:6379"
     restart: always
-    # mailsender:
-    #   image: ruanlopes1350/mailsender:latest
-    #   container_name: mailsender_app
+    networks:
+      - mailsender-network
 
-    # Política de restart - reinicia apenas em caso de falha
-    # restart: unless-stopped
+  mailsender:
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: ruanlopes1350/mailsender:latest
+    container_name: mailsender-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-5016}:5016"
+    environment:
+      NODE_ENV: production
+      PORT: 5016
+      DB_URL: mongodb://mongo:27017/mailsender
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MASTER_KEY: ${MASTER_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      TZ: America/Sao_Paulo
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - redis
+    healthcheck:
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:5016/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - mailsender-network
 
-    # Mapeamento de portas (HOST:CONTAINER)
-    # ports:
-    #   - "${HOST_PORT:-5016}:5016"
-
-    # Variáveis de ambiente
-    # environment:
-    #   NODE_ENV: production
-    #   PORT: 5016
-    #   DB_URL: ${DB_URL}
-    #   SENDER_EMAIL: ${SENDER_EMAIL}
-    #   SENDER_PASSWORD: ${SENDER_PASSWORD}
-    #   MASTER_KEY: ${MASTER_KEY}
-    #   JWT_SECRET: ${JWT_SECRET}
-    #   ADMIN_USERNAME: ${ADMIN_USERNAME}
-    #   ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-    #   TZ: America/Sao_Paulo
-
-    # Arquivo .env (recomendado)
-    # env_file:
-    #   - .env
-
-    # Healthcheck para monitorar o status do container
-    # healthcheck:
-    #   test: [ "CMD", "node", "-e", "require('http').get('http://localhost:5015/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
-    #   start_period: 40s
-
-    # Limites de recursos (ajuste conforme necessário)
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '1.0'
-    #       memory: 512M
-    #     reservations:
-    #       cpus: '0.25'
-    #       memory: 256M
-
-    # Configuração de logs
-    # logging:
-    #   driver: "json-file"
-    #   options:
-    #     max-size: "10m"
-    #     max-file: "3"
-
-    # Rede personalizada
-    # networks:
-    #   - mailsender-network
-    # Volumes (opcional - descomente se precisar persistir dados)
-    # volumes:
-    #   - mailsender-data:/app/data
-    #   - ./logs:/app/logs
-
-    # Definição de redes
-
-
-
-
-    # networks:
-    #   mailsender-network:
-    #     driver: bridge
-    #     name: mailsender-network
-
-    # Definição de volumes (opcional)
+networks:
+  mailsender-network:
+    driver: bridge
+    name: mailsender-network
 volumes:
   mongo-data:
     # mailsender-data:
