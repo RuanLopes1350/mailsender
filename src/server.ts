@@ -68,6 +68,8 @@ app.get('/api/admin/listar', authMiddleware, adminController.listarAdmins.bind(a
 app.post('/api/admin/criar', authMiddleware, adminController.criarAdmin.bind(adminController));
 app.get('/api/config', authMiddleware, configController.obterConfig.bind(configController));
 app.post('/api/config/aprovar', authMiddleware, configController.aprovarApiKey.bind(configController));
+app.get('/api/emails/detalhes/:id', authMiddleware, emailController.buscarEmailPorId.bind(emailController));
+app.get('/api/emails/todos', authMiddleware, emailController.listarTodosEmails.bind(emailController));
 
 // Rotas Protegidas por API Key (para Desenvolvedores)
 app.post('/api/emails/send', apiKeyMiddleware, emailController.enviarEmail);

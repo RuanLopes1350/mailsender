@@ -79,6 +79,15 @@ class EmailService {
     async buscarEmailsDoUsuario(apiKeyUser: IApiKey): Promise<IEmail[]> {
         return await this.emailRepository.buscarPorUsuario(apiKeyUser);
     }
+
+    // Busca detalhes de um email por ID
+    async buscarEmailPorId(id: string): Promise<IEmail | null> {
+        return await this.emailRepository.buscarEmailPorId(id);
+    }
+
+    async listarTodosEmails(): Promise<IEmail[]> {
+        return await this.emailRepository.listarTodosEmails();
+    }
 }
 
 export default EmailService;

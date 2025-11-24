@@ -1,10 +1,11 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { RequestWithUser } from '../middleware/apiKeyMiddleware.js';
 import EmailService from '../service/emailService.js';
 import EmailSenderService from '../service/emailSenderService.js';
 import ApiKeyService from '../service/apiKeyService.js';
 import { IApiKey } from '../models/apiKey.js';
 import { emailQueue } from '../utils/queue/emailQueue.js';
+import { IEmail } from '../models/email.js';
 
 const ServidoresValidos = process.env.SERVIDORES_VALIDOS
     ? process.env.SERVIDORES_VALIDOS.split(',').map(s => s.trim())
@@ -172,6 +173,46 @@ class EmailController {
             });
         }
     };
+
+    async buscarEmailPorId(req: Request, res: Response): Promise<void> {
+        try {
+            const emailId = req.params.id;
+            console.log(`\n🔍 Obtendo detalhes do email ID: ${emailId}...`);
+
+            const email = await this.emailService.buscarEmailPorId(emailId);
+
+            if (!email) {
+                console.log(`   ⚠️ Email não encontrado`);
+                res.status(404).json({ message: 'Email não encontrado' });
+                return;
+            }
+
+            console.log(`   ✓ Detalhes obtidos com sucesso`);
+            res.json(email);
+
+        } catch (error) {
+            console.error(`   ❌ Erro ao obter detalhes do email:`, error);
+            res.status(500).json({
+                message: 'Erro ao obter detalhes do email',
+                error: (error as Error).message
+            });
+        }
+    }
+
+    async listarTodosEmails(req: Request, res: Response): Promise<void> {
+        try {
+            console.log(`\n📋 Listando todos os emails...`);
+            const emails = await this.emailService.listarTodosEmails();
+            console.log(`   ✓ ${emails.length} email(s) encontrado(s)`);
+            res.json(emails);
+        } catch (error) {
+            console.error(`   ❌ Erro ao listar todos os emails:`, error);
+            res.status(500).json({
+                message: 'Erro ao listar todos os emails',
+                error: (error as Error).message
+            });
+        }
+    }
 }
 
 export default EmailController;

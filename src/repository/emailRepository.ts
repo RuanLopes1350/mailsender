@@ -79,6 +79,14 @@ class EmailRepository {
             hoje: emailsHoje 
         };
     }
+
+    async buscarEmailPorId(id: string): Promise<IEmail | null> {
+        return await EmailModel.findById(id).populate('apiKeyUser');
+    }
+    
+    async listarTodosEmails(): Promise<IEmail[]> {
+        return await EmailModel.find({}).sort({ createdAt: -1 }).populate('apiKeyUser');
+    }
 }
 
 export default EmailRepository;
