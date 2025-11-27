@@ -1,5 +1,6 @@
 import { IApiKey } from '../models/apiKey.js';
 import EmailModel, { IEmail } from '../models/email.js';
+import { EmailFilterBuilder } from './filter/emailFilterBuilder.js';
 
 // Repositório responsável por todas as operações de Emails no banco de dados
 class EmailRepository {
@@ -27,19 +28,19 @@ class EmailRepository {
 
     // Atualiza o status de um email
     async atualizarStatus(
-        id: string, 
-        status: 'sent' | 'failed' | 'pending', 
+        id: string,
+        status: 'sent' | 'failed' | 'pending',
         erro?: string
     ): Promise<boolean> {
-        const updateData: any = { 
-            status, 
-            updatedAt: new Date() 
+        const updateData: any = {
+            status,
+            updatedAt: new Date()
         };
-        
+
         if (erro) {
             updateData.error = erro;
         }
-        
+
         if (status === 'sent') {
             updateData.sentAt = new Date();
         }
@@ -48,7 +49,7 @@ class EmailRepository {
             { _id: id },
             { $set: updateData }
         );
-        
+
         return result.modifiedCount > 0;
     }
 
@@ -71,21 +72,36 @@ class EmailRepository {
             EmailModel.countDocuments({ createdAt: { $gte: hoje } })
         ]);
 
-        return { 
-            total, 
-            enviados, 
-            falhas, 
-            pendentes, 
-            hoje: emailsHoje 
+        return {
+            total,
+            enviados,
+            falhas,
+            pendentes,
+            hoje: emailsHoje
         };
     }
 
     async buscarEmailPorId(id: string): Promise<IEmail | null> {
         return await EmailModel.findById(id).populate('apiKeyUser');
     }
-    
-    async listarTodosEmails(): Promise<IEmail[]> {
-        return await EmailModel.find({}).sort({ createdAt: -1 }).populate('apiKeyUser');
+
+    async listarTodosEmails(filtros: any = {}): Promise<IEmail[]> {
+        try {
+            const query = EmailFilterBuilder.buildFilter(filtros);
+
+            const resultado = await EmailModel.find(query)
+                .sort({ createdAt: -1 })
+                .populate('apiKeyUser');
+
+            return resultado;
+        } catch (error) {
+            console.error('Erro ao listar emails com filtros:', error);
+
+            // Fallback: retorna todos os emails sem filtro
+            return await EmailModel.find({})
+                .sort({ createdAt: -1 })
+                .populate('apiKeyUser');
+        }
     }
 }
 
