@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mailsender-backend-env
+  labels:
+    app: mailsender-backend
+data:
+  # Servidor
+  PORT: "5016"
+  NODE_ENV: "production"
+  
+  # MongoDB - Conexão interna do Kubernetes
+  DB_URL: "mongodb://<MONGO_USER>:<MONGO_PASSWORD>@mongo-mailsender:27017/mailsender?authSource=admin"
+  
+  # Redis - Conexão interna do Kubernetes
+  REDIS_HOST: "redis-mailsender"
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: "<REPLACE_WITH_REDIS_PASSWORD>"
+  
+  # Segurança
+  MASTER_KEY: "<REPLACE_WITH_SECURE_MASTER_KEY>"
+  JWT_SECRET: "<REPLACE_WITH_SECURE_JWT_SECRET>"
+  
+  # Admin padrão
+  ADMIN_USERNAME: "<ADMIN_USERNAME>"
+  ADMIN_PASSWORD: "<REPLACE_WITH_SECURE_PASSWORD>"
+  
+  # Servidores de e-mail válidos
+  SERVIDORES_VALIDOS: "gmail.com,outlook.com,hotmail.com,yahoo.com,estudante.ifro.edu.br,ifro.edu.br"
+  
+  # Timezone
+  TZ: "America/Manaus"

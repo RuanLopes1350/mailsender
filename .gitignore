@@ -65,3 +65,6 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# kubernetes
+backend-configmap.yaml
