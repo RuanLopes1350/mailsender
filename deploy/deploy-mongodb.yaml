@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mongo-mailsender-pvc
+  name: mailsender-mongodb-pvc
   labels:
-    app: mongo-mailsender
+    app: mailsender-mongodb
 spec:
   accessModes:
     - ReadWriteOnce
@@ -14,20 +14,20 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongo-mailsender
+  name: mailsender-mongodb
   labels:
-    app: mongo-mailsender
+    app: mailsender-mongodb
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mongo-mailsender
+      app: mailsender-mongodb
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: mongo-mailsender
+        app: mailsender-mongodb
     spec:
       containers:
         - name: mongodb
@@ -39,12 +39,10 @@ spec:
           env:
             - name: TZ
               value: "America/Manaus"
-            - name: MONGO_INITDB_DATABASE
-              value: "mailsender"
-            - name: MONGO_INITDB_ROOT_USERNAME
-              value: "mailsender"
-            - name: MONGO_INITDB_ROOT_PASSWORD
-              value: "M@ilS3nd3r2025!"
+          
+          envFrom:
+            - configMapRef:
+                name: mailsender-backend-env
           
           volumeMounts:
             - name: mongodb-data
@@ -85,14 +83,14 @@ spec:
       volumes:
         - name: mongodb-data
           persistentVolumeClaim:
-            claimName: mongo-mailsender-pvc
+            claimName: mailsender-mongodb-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongo-mailsender
+  name: mailsender-mongodb
   labels:
-    app: mongo-mailsender
+    app: mailsender-mongodb
 spec:
   type: ClusterIP
   ports:
@@ -101,4 +99,4 @@ spec:
       targetPort: 27017
       protocol: TCP
   selector:
-    app: mongo-mailsender
+    app: mailsender-mongodb

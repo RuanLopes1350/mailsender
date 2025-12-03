@@ -1,251 +1,242 @@
-# Deploy Backend - Mail Sender
+# Deploy do Mailsender Backend no Kubernetes
+
+Este guia explica como fazer o deploy do backend do Mailsender no Kubernetes.
 
 ## Pré-requisitos
 
-- Cluster Kubernetes configurado
-- `kubectl` instalado e configurado
-- Docker instalado (para build da imagem)
-- Conta no Docker Hub (ou outro registry)
+- Acesso ao cluster Kubernetes configurado
+- kubectl instalado e configurado
+- Docker instalado para build das imagens
+- Conta no Docker Hub (ruanlopes1350)
 
-## 1. Build e Push da Imagem
+## Estrutura dos Arquivos
+
+- `backend-configmap.example.yaml` - Template de configuração (copiar e editar)
+- `deploy-mongodb.yaml` - Deploy do MongoDB com PersistentVolume
+- `deploy-redis.yaml` - Deploy do Redis com PersistentVolume  
+- `deploy-backend.yaml` - Deploy da API do backend
+
+## Passo a Passo
+
+### 1. Preparar ConfigMap
 
 ```bash
-cd /Users/ruanlopes/Documents/mailsender/backend
+# Copiar o template
+cp backend-configmap.example.yaml backend-configmap.yaml
 
-# Build da imagem
-docker build -t ruanlopes1350/mailsender-backend:latest -f dockerfile .
-
-# Push para o Docker Hub
-docker push ruanlopes1350/mailsender-backend:latest
-```
-
-**Nota**: Ajuste o nome da imagem (`ruanlopes1350`) para o seu usuário do Docker Hub.
-
-## 2. Configurar Variáveis de Ambiente
-
-Antes do deploy, edite o arquivo `backend-configmap.yaml` e ajuste as seguintes variáveis:
-
-```yaml
-# Segurança - GERAR VALORES SEGUROS EM PRODUÇÃO
-MASTER_KEY: "<GERAR_NOVO>"
-JWT_SECRET: "<GERAR_NOVO>"
-ADMIN_PASSWORD: "<SENHA_SEGURA>"
-REDIS_PASSWORD: "<SENHA_REDIS>"
-
-# MongoDB credentials
-DB_URL: "mongodb://<USER>:<PASSWORD>@mongo-mailsender:27017/mailsender?authSource=admin"
+# Editar e substituir os placeholders:
+# - <MONGO_USER> e <MONGO_PASSWORD>
+# - <REPLACE_WITH_SECURE_PASSWORD> (Redis)
+# - <REPLACE_WITH_SECURE_MASTER_KEY>
+# - <REPLACE_WITH_SECURE_JWT_SECRET>
+# - <REPLACE_WITH_SECURE_ADMIN_PASSWORD>
 ```
 
 **Gerar secrets seguros:**
 ```bash
-# Para JWT_SECRET e MASTER_KEY
-openssl rand -base64 32
-
-# Para senhas
-openssl rand -base64 24
+openssl rand -base64 48  # Para JWT_SECRET e MASTER_KEY
 ```
 
-## 3. Deploy no Kubernetes
-
-Execute os comandos na seguinte ordem:
+### 2. Build e Push da Imagem Docker
 
 ```bash
-cd /Users/ruanlopes/Documents/mailsender/backend/deploy
-
-# 1. MongoDB
-kubectl apply -f deploy/deploy-mongodb.yaml
-
-# 2. Redis
-kubectl apply -f deploy/deploy-redis.yaml
-
-# Aguardar MongoDB e Redis iniciarem
-kubectl wait --for=condition=ready pod -l app=mongo-mailsender --timeout=120s
-kubectl wait --for=condition=ready pod -l app=redis-mailsender --timeout=120s
-
-# 3. Backend ConfigMap
-kubectl apply -f deploy/backend-configmap.yaml
-
-# 4. Backend Deployment
-kubectl apply -f deploy/deploy-backend.yaml
-```
-
-## 4. Verificar Status
-
-```bash
-# Verificar todos os pods do mailsender
-kubectl get pods | grep mailsender
-
-# Logs do backend
-kubectl logs -f deploy/mailsender-backend
-
-# Logs do MongoDB
-kubectl logs -f deploy/mongo-mailsender
-
-# Logs do Redis
-kubectl logs -f deploy/redis-mailsender
-
-# Status detalhado
-kubectl describe deployment mailsender-backend
-```
-
-## 5. Testar a API
-
-```bash
-# Health check (dentro do cluster)
-kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
-  curl http://mailsender-backend/api
-
-# Status detalhado
-kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
-  curl http://mailsender-backend/api/status
-```
-
-## 6. Expor a API (Opcional)
-
-Para acessar a API externamente, você pode criar um Ingress ou usar Port Forward:
-
-### Port Forward (desenvolvimento)
-```bash
-kubectl port-forward service/mailsender-backend 5016:80
-# Acesse: http://localhost:5016/api
-```
-
-### Ingress (produção)
-Crie um arquivo `ingress.yaml`:
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: mailsender-backend-ingress
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - api-mailsender.seudominio.com
-      secretName: mailsender-backend-tls
-  rules:
-    - host: api-mailsender.seudominio.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: mailsender-backend
-                port:
-                  number: 80
-```
-
-Aplique:
-```bash
-kubectl apply -f ingress.yaml
-```
-
-## 7. Atualizar a Aplicação
-
-Após fazer alterações no código:
-
-```bash
-# 1. Build da nova versão
+# Build da imagem
 docker build -t ruanlopes1350/mailsender-backend:latest -f dockerfile .
+
+# Login no Docker Hub (se necessário)
+docker login
+
+# Push da imagem
+docker push ruanlopes1350/mailsender-backend:latest
+```
+
+### 3. Deploy no Kubernetes
+
+```bash
+# Aplicar ConfigMap (com suas configurações)
+kubectl apply -f backend-configmap.yaml
+
+# Deploy do MongoDB
+kubectl apply -f deploy-mongodb.yaml
+
+# Deploy do Redis
+kubectl apply -f deploy-redis.yaml
+
+# Aguardar MongoDB e Redis estarem prontos
+kubectl wait --for=condition=ready pod -l app=mailsender-mongodb --timeout=120s
+kubectl wait --for=condition=ready pod -l app=mailsender-redis --timeout=120s
+
+# Deploy da API
+kubectl apply -f deploy-backend.yaml
+```
+
+### 4. Verificar o Deploy
+
+```bash
+# Ver todos os recursos
+kubectl get all -l app=mailsender-backend
+kubectl get all -l app=mailsender-mongodb
+kubectl get all -l app=mailsender-redis
+
+# Ou ver tudo de uma vez
+kubectl get all | grep mailsender
+
+# Ver logs da API
+kubectl logs -f deployment/mailsender-backend
+
+# Verificar se os pods estão rodando
+kubectl get pods
+
+# Descrever um pod (para troubleshooting)
+kubectl describe pod <nome-do-pod>
+```
+
+### 5. Acessar o Serviço
+
+O serviço é exposto internamente no cluster como `api-mailsender` na porta 80.
+
+Para acesso externo, configure um Ingress ou use port-forward para testes:
+
+```bash
+# Port forward para teste local
+kubectl port-forward service/api-mailsender 5016:80
+
+# Testar
+curl http://localhost:5016/api
+```
+
+## Atualizar Deploy
+
+### Atualização do Código
+
+Quando fizer alterações no código:
+
+```bash
+# 1. Build nova imagem
+docker build -t ruanlopes1350/mailsender-backend:latest -f dockerfile .
+
+# 2. Push para Docker Hub
 docker push ruanlopes1350/mailsender-backend:latest
 
-# 2. Forçar atualização do deployment
+# 3. Forçar atualização no Kubernetes (rollout)
 kubectl rollout restart deployment/mailsender-backend
 
-# 3. Acompanhar o rollout
+# 4. Acompanhar o rollout
 kubectl rollout status deployment/mailsender-backend
 ```
 
-## 8. Remover Deploy
+### Atualização do ConfigMap
+
+Quando alterar configurações no ConfigMap:
 
 ```bash
-# Remover na ordem inversa
-kubectl delete -f deploy/deploy-backend.yaml
-kubectl delete -f deploy/backend-configmap.yaml
-kubectl delete -f deploy/deploy-redis.yaml
-kubectl delete -f deploy/deploy-mongodb.yaml
+# 1. Editar o arquivo
+vim backend-configmap.yaml
+
+# 2. Aplicar as mudanças
+kubectl apply -f backend-configmap.yaml
+
+# 3. Reiniciar o deployment para carregar as novas configurações
+kubectl rollout restart deployment/mailsender-backend
+
+# 4. Verificar se aplicou corretamente
+kubectl rollout status deployment/mailsender-backend
 ```
-
-**⚠️ ATENÇÃO**: Isso também removerá os PersistentVolumeClaims e os dados armazenados!
-
-## Estrutura de Arquivos
-
-```
-backend/deploy/
-├── README.md                       # Este arquivo
-├── backend-configmap.example.yaml  # Exemplo de configuração
-├── backend-configmap.yaml          # Configuração real (não commitar)
-├── deploy-backend.yaml             # Deployment + Service do backend
-├── deploy-mongodb.yaml             # PVC + Deployment + Service do MongoDB
-└── deploy-redis.yaml               # PVC + Deployment + Service do Redis
-```
-
-## URLs e Portas
-
-- **Backend API**: `http://mailsender-backend:80` (interno ao cluster)
-- **MongoDB**: `mongodb://mongo-mailsender:27017` (interno ao cluster)
-- **Redis**: `redis://redis-mailsender:6379` (interno ao cluster)
-
-## Recursos Alocados
-
-### Backend
-- **Requests**: 256Mi RAM, 0.25 CPU
-- **Limits**: 512Mi RAM, 0.5 CPU
-
-### MongoDB
-- **Requests**: 256Mi RAM, 0.25 CPU
-- **Limits**: 512Mi RAM, 0.5 CPU
-- **Storage**: 2Gi
-
-### Redis
-- **Requests**: 128Mi RAM, 0.1 CPU
-- **Limits**: 256Mi RAM, 0.25 CPU
-- **Storage**: 1Gi
 
 ## Troubleshooting
 
 ### Pod não inicia
+
 ```bash
+# Ver eventos do pod
 kubectl describe pod <pod-name>
+
+# Ver logs
 kubectl logs <pod-name>
+
+# Ver logs anteriores (se o pod reiniciou)
+kubectl logs <pod-name> --previous
 ```
 
-### Erro de conexão com MongoDB
+### Verificar ConfigMap
+
 ```bash
-# Verificar se o MongoDB está rodando
-kubectl get pods -l app=mongo-mailsender
-
-# Testar conexão
-kubectl run -it --rm mongo-test --image=mongo:8 --restart=Never -- \
-  mongosh mongodb://mailsender:M@ilS3nd3r2024!@mongo-mailsender:27017/mailsender?authSource=admin
+kubectl get configmap mailsender-backend-env -o yaml
 ```
 
-### Erro de conexão com Redis
+### Verificar PersistentVolumes
+
 ```bash
-# Verificar se o Redis está rodando
-kubectl get pods -l app=redis-mailsender
-
-# Testar conexão
-kubectl run -it --rm redis-test --image=redis:alpine --restart=Never -- \
-  redis-cli -h redis-mailsender -p 6379 -a R3d!sM@ilS3nd3r2024 ping
+kubectl get pvc
+kubectl describe pvc mongo-mailsender-pvc
+kubectl describe pvc redis-mailsender-pvc
 ```
 
-## Segurança
+### Testar conectividade
 
-- Todos os containers rodam com usuário não-root
-- Capabilities DROP ALL aplicadas
-- ReadOnlyRootFilesystem quando possível
-- Senhas e secrets devem ser alterados em produção
-- Use Kubernetes Secrets para dados sensíveis em produção
+```bash
+# Entrar em um pod para testar conexões
+kubectl exec -it deployment/mailsender-backend -- sh
 
-## Próximos Passos
+# Dentro do pod, testar:
+ping mailsender-mongodb
+ping mailsender-redis
+curl http://localhost:5016/api
+```
 
-1. Configurar backup automático do MongoDB
-2. Implementar monitoramento com Prometheus
-3. Configurar alertas
-4. Implementar CI/CD para deploys automáticos
-5. Configurar frontend do mailsender
+## Limpar Recursos
+
+Para remover tudo:
+
+```bash
+kubectl delete -f deploy-backend.yaml
+kubectl delete -f deploy-redis.yaml
+kubectl delete -f deploy-mongodb.yaml
+kubectl delete -f backend-configmap.yaml
+
+# Remover PVCs (isso apaga os dados!)
+kubectl delete pvc mongo-mailsender-pvc
+kubectl delete pvc redis-mailsender-pvc
+```
+
+## Backup dos Dados
+
+### Backup do MongoDB
+
+```bash
+# Entrar no pod do MongoDB
+kubectl exec -it deployment/mongo-mailsender -- sh
+
+# Fazer backup
+mongodump --uri="mongodb://user:pass@localhost:27017/mailsender" --out=/tmp/backup
+
+# Copiar backup para fora do pod
+kubectl cp mongo-mailsender-<pod-id>:/tmp/backup ./backup-$(date +%Y%m%d)
+```
+
+### Backup do Redis
+
+```bash
+# O Redis já persiste com AOF (append-only file)
+# Para backup manual:
+kubectl exec -it deployment/redis-mailsender -- redis-cli -a $REDIS_PASSWORD BGSAVE
+```
+
+## Monitoramento
+
+Ver métricas de recursos:
+
+```bash
+# Uso de CPU e memória
+kubectl top pod -l app=mailsender-backend
+kubectl top pod -l app=mailsender-mongodb
+kubectl top pod -l app=mailsender-redis
+```
+
+## Notas Importantes
+
+1. **Secrets**: Em produção, use Kubernetes Secrets ao invés de ConfigMap para dados sensíveis
+2. **Storage**: Os PVCs usam 2Gi (MongoDB) e 1Gi (Redis) - ajuste conforme necessário
+3. **Recursos**: Os limits estão definidos para ambientes compartilhados - ajuste conforme sua necessidade
+4. **Backup**: Configure backups automáticos dos PVCs em produção
+5. **Segurança**: O nome do serviço no cluster será usado como subdomínio

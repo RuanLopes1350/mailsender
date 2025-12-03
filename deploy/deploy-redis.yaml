@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: redis-mailsender-pvc
+  name: mailsender-redis-pvc
   labels:
-    app: redis-mailsender
+    app: mailsender-redis
 spec:
   accessModes:
     - ReadWriteOnce
@@ -14,34 +14,27 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis-mailsender
+  name: mailsender-redis
   labels:
-    app: redis-mailsender
+    app: mailsender-redis
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: redis-mailsender
+      app: mailsender-redis
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: redis-mailsender
+        app: mailsender-redis
     spec:
       containers:
         - name: redis
-          image: redis:alpine
+          image: redis:7-alpine
           ports:
             - containerPort: 6379
               protocol: TCP
-          
-          command:
-            - redis-server
-            - --requirepass
-            - "R3d!sM@ilS3nd3r2025"
-            - --appendonly
-            - "yes"
           
           env:
             - name: TZ
@@ -51,12 +44,24 @@ spec:
             - name: redis-data
               mountPath: /data
           
+          command:
+            - redis-server
+            - --appendonly
+            - "yes"
+            - --requirepass
+            - "$(REDIS_PASSWORD)"
+          
+          envFrom:
+            - configMapRef:
+                name: mailsender-backend-env
+          
           livenessProbe:
             exec:
               command:
                 - redis-cli
-                - --raw
-                - incr
+                - --no-auth-warning
+                - -a
+                - "$(REDIS_PASSWORD)"
                 - ping
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -67,8 +72,9 @@ spec:
             exec:
               command:
                 - redis-cli
-                - --raw
-                - incr
+                - --no-auth-warning
+                - -a
+                - "$(REDIS_PASSWORD)"
                 - ping
             initialDelaySeconds: 5
             periodSeconds: 5
@@ -88,14 +94,14 @@ spec:
       volumes:
         - name: redis-data
           persistentVolumeClaim:
-            claimName: redis-mailsender-pvc
+            claimName: mailsender-redis-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis-mailsender
+  name: mailsender-redis
   labels:
-    app: redis-mailsender
+    app: mailsender-redis
 spec:
   type: ClusterIP
   ports:
@@ -104,4 +110,4 @@ spec:
       targetPort: 6379
       protocol: TCP
   selector:
-    app: redis-mailsender
+    app: mailsender-redis

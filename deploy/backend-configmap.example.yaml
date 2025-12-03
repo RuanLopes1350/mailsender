@@ -9,24 +9,28 @@ data:
   PORT: "5016"
   NODE_ENV: "production"
   
-  # MongoDB - Conexão interna do Kubernetes
+  # MongoDB
+  # Formato: mongodb://<user>:<password>@<host>:<port>/<database>?authSource=admin
   DB_URL: "mongodb://<MONGO_USER>:<MONGO_PASSWORD>@mongo-mailsender:27017/mailsender?authSource=admin"
   
-  # Redis - Conexão interna do Kubernetes
+  # MongoDB Init (usado pelo container do MongoDB)
+  MONGO_INITDB_DATABASE: "mailsender"
+  MONGO_INITDB_ROOT_USERNAME: "<MONGO_USER>"
+  MONGO_INITDB_ROOT_PASSWORD: "<MONGO_PASSWORD>"
+  
+  # Redis
   REDIS_HOST: "redis-mailsender"
   REDIS_PORT: "6379"
-  REDIS_PASSWORD: "<REPLACE_WITH_REDIS_PASSWORD>"
+  REDIS_PASSWORD: "<REPLACE_WITH_SECURE_PASSWORD>"
   
   # Segurança
+  # Gerar com: openssl rand -base64 48
   MASTER_KEY: "<REPLACE_WITH_SECURE_MASTER_KEY>"
   JWT_SECRET: "<REPLACE_WITH_SECURE_JWT_SECRET>"
   
   # Admin padrão
-  ADMIN_USERNAME: "<ADMIN_USERNAME>"
-  ADMIN_PASSWORD: "<REPLACE_WITH_SECURE_PASSWORD>"
+  ADMIN_USERNAME: "admin"
+  ADMIN_PASSWORD: "<REPLACE_WITH_SECURE_ADMIN_PASSWORD>"
   
-  # Servidores de e-mail válidos
-  SERVIDORES_VALIDOS: "gmail.com,outlook.com,hotmail.com,yahoo.com,estudante.ifro.edu.br,ifro.edu.br"
-  
-  # Timezone
-  TZ: "America/Manaus"
+  # E-mail - Servidores válidos separados por vírgula
+  SERVIDORES_VALIDOS: "gmail.com,outlook.com,hotmail.com,yahoo.com"
