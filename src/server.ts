@@ -46,10 +46,6 @@ const statsController = new StatsController();
 const adminController = new AdminController();
 const configController = new ConfigController();
 
-// Painel de administração (arquivos estáticos)
-app.use('/painel', express.static(path.resolve('public')));
-app.use(express.static(path.resolve('public')));
-
 // Rotas Públicas
 app.get('/api', statsController.healthCheck);
 app.get('/api/status', statsController.statusDetalhado);
