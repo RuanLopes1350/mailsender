@@ -37,6 +37,10 @@ class AdminRepository {
     async listarAdmins(): Promise<IAdmin[]> {
         return this.model.find();
     }
+
+    async deletarAdmin(id: string): Promise<{ deletedCount?: number }> {
+        return this.model.deleteOne({ _id: id });
+    }
 }
 
 export default AdminRepository;

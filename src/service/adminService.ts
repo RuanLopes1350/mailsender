@@ -20,6 +20,10 @@ class AdminService {
     async listarAdmins(): Promise<IAdmin[]> {
         return await this.repository.listarAdmins()
     }
+
+    async deletarAdmin(id: string): Promise<{ deletedCount?: number }> {
+        return await this.repository.deletarAdmin(id)
+    }
 }
 
 export default AdminService

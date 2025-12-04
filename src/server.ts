@@ -62,6 +62,7 @@ app.post('api/keys/nova', authMiddleware, apiKeyController.gerarApiKey);
 app.get('/api/emails/recentes', authMiddleware, emailController.listarEmailsRecentes);
 app.get('/api/admin/listar', authMiddleware, adminController.listarAdmins.bind(adminController));
 app.post('/api/admin/criar', authMiddleware, adminController.criarAdmin.bind(adminController));
+app.delete('/api/admin/deletar/:id', authMiddleware, adminController.deletarAdmin.bind(adminController));
 app.get('/api/config', authMiddleware, configController.obterConfig.bind(configController));
 app.post('/api/config/aprovar', authMiddleware, configController.aprovarApiKey.bind(configController));
 app.get('/api/emails/detalhes/:id', authMiddleware, emailController.buscarEmailPorId.bind(emailController));

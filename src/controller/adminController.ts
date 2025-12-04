@@ -131,6 +131,21 @@ class AdminController {
             });
         }
     }
+
+    async deletarAdmin(req: Request, res: Response): Promise<void> {
+        try {
+            const adminId = req.params.id;
+            await this.service.deletarAdmin(adminId);
+            res.status(200).json({
+                message: "Admin deletado com sucesso"
+            });
+        } catch (error) {
+            console.error('Erro ao deletar admin:', error);
+            res.status(500).json({
+                message: "Erro ao deletar admin. Tente novamente mais tarde."
+            });
+        }
+    }
 }
 
 export default AdminController;

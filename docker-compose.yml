@@ -20,52 +20,52 @@ services:
     networks:
       - mailsender-network
 
-  mailsender:
-    build:
-      context: .
-      dockerfile: dockerfile
-    image: ruanlopes1350/mailsender:latest
-    container_name: mailsender-backend
-    restart: unless-stopped
-    ports:
-      - "${BACKEND_PORT:-5016}:5016"
-    environment:
-      NODE_ENV: production
-      PORT: 5016
-      DB_URL: mongodb://mongo:27017/mailsender
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      MASTER_KEY: ${MASTER_KEY}
-      JWT_SECRET: ${JWT_SECRET}
-      ADMIN_USERNAME: ${ADMIN_USERNAME}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      TZ: America/Sao_Paulo
-    env_file:
-      - .env
-    depends_on:
-      - mongo
-      - redis
-    healthcheck:
-      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:5016/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - mailsender-network
+  # mailsender:
+  #   build:
+  #     context: .
+  #     dockerfile: dockerfile
+  #   image: ruanlopes1350/mailsender:latest
+  #   container_name: mailsender-backend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${BACKEND_PORT:-5016}:5016"
+  #   environment:
+  #     NODE_ENV: production
+  #     PORT: 5016
+  #     DB_URL: mongodb://mongo:27017/mailsender
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     MASTER_KEY: ${MASTER_KEY}
+  #     JWT_SECRET: ${JWT_SECRET}
+  #     ADMIN_USERNAME: ${ADMIN_USERNAME}
+  #     ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+  #     TZ: America/Sao_Paulo
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - mongo
+  #     - redis
+  #   healthcheck:
+  #     test: [ "CMD", "node", "-e", "require('http').get('http://localhost:5016/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '1.0'
+  #         memory: 512M
+  #       reservations:
+  #         cpus: '0.25'
+  #         memory: 256M
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   networks:
+  #     - mailsender-network
 
 networks:
   mailsender-network:
