@@ -1,6 +1,6 @@
 {
   "name": "mailsender-microservice",
-  "version": "2.0.0",
+  "version": "0.3.0",
   "description": "Um microserviço para envio de e-mails utilizando Node.js, Express e MJML.",
   "type": "module",
   "main": "dist/server.js",
