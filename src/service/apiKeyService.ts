@@ -4,7 +4,7 @@ import ApiKeyRepository from '../repository/apiKeyRepository.js';
 import { IApiKey } from '../models/apiKey.js';
 import ConfigRepository from '../repository/configRepository.js';
 
-const SALT_ROUNDS = 15;
+const SALT_ROUNDS = 8;
 
 // Service responsável pelas regras de negócio relacionadas às API Keys
 class ApiKeyService {
@@ -42,68 +42,126 @@ class ApiKeyService {
 
         // Gera a chave aleatória
         console.log('Gerando chave aleatoria...');
-        const apiKey = crypto.randomBytes(32).toString('hex');
+        const prefix = crypto.randomBytes(4).toString('hex');
+        const secret = crypto.randomBytes(32).toString('hex');
+        const fullApiKey = `${prefix}.${secret}`;
 
         // Cria o hash da chave
         console.log('Gerando hash bcrypt...');
-        const hash = await bcrypt.hash(apiKey, SALT_ROUNDS);
+        const hash = await bcrypt.hash(fullApiKey, SALT_ROUNDS);
 
         // Salva no banco de dados
         console.log('Salvando no banco de dados...');
         await this.apiKeyRepository.criar({
             usuario,
-            email: email,
-            pass: pass,
+            email,
+            pass,
+            prefix,
             apiKey: hash,
             createdAt: new Date(),
             lastUsed: null,
-            isActive: isActive
+            isActive
         });
 
-        console.log(`API Key gerada com sucesso para o usuario: ${usuario}`);
-        return { apiKey, isActive };
+        console.log(`API Key gerada: ${fullApiKey}`);
+        return { apiKey: fullApiKey, isActive };
     }
 
+    // Implementar cache em memória com TTL
+    private apiKeyCache = new Map<string, { valid: boolean, expires: number, usuario?: IApiKey }>();
+    
     // Valida se uma API Key é válida
-    async validarApiKey(apiKey: string): Promise<boolean> {
+    async validarApiKey(apiKeyInput: string): Promise<boolean> {
         try {
-            const chaves = await this.apiKeyRepository.buscarTodas();
-            console.log(`Comparando com ${chaves.length} chave(s) no banco...`);
-
-            for (const chave of chaves) {
-                const isValid = await bcrypt.compare(apiKey, chave.apiKey);
-                if (isValid) {
-                    // Atualiza o lastUsed
-                    await this.apiKeyRepository.atualizarUltimoUso(chave.usuario);
-                    console.log(`Chave validada com sucesso para usuario: ${chave.usuario}`);
-                    return true;
-                }
+            // Validação básica de formato
+            if (!apiKeyInput || !apiKeyInput.includes('.')) {
+                console.log('Formato de chave inválido (esperado: prefix.secret)');
+                return false;
             }
 
-            console.log('Nenhuma chave correspondente encontrada');
-            return false;
+            // 1. Verifica cache primeiro
+            const cached = this.apiKeyCache.get(apiKeyInput);
+            if (cached && cached.expires > Date.now()) {
+                console.log('✅ API Key validada via cache');
+                return cached.valid;
+            }
+
+            // 2. Se não estiver em cache, valida com bcrypt
+            const [prefix] = apiKeyInput.split('.');
+            console.log(`Buscando chave com prefixo: ${prefix}`);
+            
+            const chave = await this.apiKeyRepository.buscarPorPrefix(prefix);
+
+            if (!chave) {
+                console.log('Nenhuma chave encontrada com este prefixo.');
+                // Cache negativo por 1 minuto para evitar ataques
+                this.apiKeyCache.set(apiKeyInput, {
+                    valid: false,
+                    expires: Date.now() + 60000
+                });
+                return false;
+            }
+
+            // Verifica se a chave está ativa
+            if (!chave.isActive) {
+                console.log('Chave encontrada mas está INATIVA');
+                this.apiKeyCache.set(apiKeyInput, {
+                    valid: false,
+                    expires: Date.now() + 60000
+                });
+                return false;
+            }
+
+            const isValid = await bcrypt.compare(apiKeyInput, chave.apiKey);
+
+            if (isValid) {
+                await this.apiKeyRepository.atualizarUltimoUso(chave.usuario);
+                console.log(`Chave validada com sucesso para: ${chave.usuario}`);
+            }
+
+            // 3. Armazena no cache por 5 minutos (válidas) ou 1 minuto (inválidas)
+            this.apiKeyCache.set(apiKeyInput, {
+                valid: isValid,
+                expires: Date.now() + (isValid ? 300000 : 60000),
+                usuario: isValid ? chave : undefined // 🚀 Cacheia o usuário também!
+            });
+
+            return isValid;
         } catch (error) {
-            console.error('Erro ao validar API key:', error);
+            console.error('Erro na validação da API key:', error);
             return false;
         }
     }
 
     // Obtém o usuário associado a uma API Key
-    async obterUsuarioPorApiKey(apiKey: string): Promise<IApiKey | null> {
+    async obterUsuarioPorApiKey(apiKeyInput: string): Promise<IApiKey | null> {
         try {
-            const chaves: IApiKey[] = await this.apiKeyRepository.buscarTodas();
+            if (!apiKeyInput.includes('.')) return null;
 
-            for (const chave of chaves) {
-                const isValid = await bcrypt.compare(apiKey, chave.apiKey);
-                if (isValid) {
-                    let usuario: IApiKey = chave
-                    return usuario;
-                }
+            // 🚀 OTIMIZAÇÃO: Busca no cache primeiro
+            const cached = this.apiKeyCache.get(apiKeyInput);
+            if (cached && cached.expires > Date.now() && cached.valid && cached.usuario) {
+                return cached.usuario;
             }
 
+            // Se não estiver em cache, busca no banco
+            const [prefix] = apiKeyInput.split('.');
+            const chave = await this.apiKeyRepository.buscarPorPrefix(prefix);
+
+            if (chave) {
+                const isValid = await bcrypt.compare(apiKeyInput, chave.apiKey);
+                if (isValid) {
+                    // Atualiza o cache com o usuário
+                    this.apiKeyCache.set(apiKeyInput, {
+                        valid: true,
+                        expires: Date.now() + 300000,
+                        usuario: chave
+                    });
+                    return chave;
+                }
+            }
             return null;
         } catch (error) {
-            console.error('Erro ao obter usuário por API key:', error);
             return null;
         }
     }
@@ -123,7 +181,7 @@ class ApiKeyService {
             return chaves.map(chave => ({
                 nome: chave.usuario,
                 email: chave.email,
-                prefixo: chave.apiKey.substring(0, 12) + '...',
+                prefixo: chave.prefix,
                 criadoEm: chave.createdAt,
                 ultimoUso: chave.lastUsed,
                 ativa: chave.isActive
@@ -157,6 +215,8 @@ class ApiKeyService {
 
         if (inativada) {
             console.log('API Key inativada com sucesso');
+            // Limpa o cache para forçar revalidação
+            this.limparCache();
         } else {
             console.log('Nenhuma chave encontrada para inativar');
         }
@@ -172,11 +232,37 @@ class ApiKeyService {
 
         if (reativada) {
             console.log('API Key reativada com sucesso');
+            // Limpa o cache para forçar revalidação
+            this.limparCache();
         } else {
             console.log('Nenhuma chave encontrada para reativar');
         }
 
         return reativada;
+    }
+
+    // Limpa o cache de API Keys (para quando uma chave for inativada ou reativada)
+    public limparCache(): void {
+        const tamanhoAntes = this.apiKeyCache.size;
+        this.apiKeyCache.clear();
+        console.log(`🧹 Cache limpo: ${tamanhoAntes} entradas removidas`);
+    }
+
+    // Remove entradas expiradas do cache (chamado periodicamente)
+    public limparCacheExpirado(): void {
+        const agora = Date.now();
+        let removidos = 0;
+        
+        for (const [key, value] of this.apiKeyCache.entries()) {
+            if (value.expires < agora) {
+                this.apiKeyCache.delete(key);
+                removidos++;
+            }
+        }
+        
+        if (removidos > 0) {
+            console.log(`🧹 Cache: ${removidos} entradas expiradas removidas`);
+        }
     }
 }
 

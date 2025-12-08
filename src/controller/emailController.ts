@@ -21,17 +21,23 @@ class EmailController {
     }
 
     enviarEmail = async (req: RequestWithUser, res: Response): Promise<void> => {
+        const requestId = `email-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        console.time(`⏱️  [${requestId}] Tempo total da requisição`);
+        
         try {
             const { to, subject, template, data = {} } = req.body;
 
-            console.log(`\n Nova requisição de envio de email`);
+            console.log(`\n📧 Nova requisição de envio de email [${requestId}]`);
             console.log(`   Para: ${to}`);
             console.log(`   Assunto: ${subject}`);
             console.log(`   Template: ${template}`);
 
+            console.time(`⏱️  [${requestId}] Validações`);
             // Validação básica
             if (!to || !subject || !template) {
-                console.log(`Dados incompletos`);
+                console.timeEnd(`⏱️  [${requestId}] Validações`);
+                console.timeEnd(`⏱️  [${requestId}] Tempo total da requisição`);
+                console.log(`❌ Dados incompletos`);
                 res.status(400).json({
                     message: 'Campos obrigatórios: to, subject, template'
                 });
@@ -40,7 +46,9 @@ class EmailController {
 
             // Validação do formato do email
             if (!to.includes('@')) {
-                console.log(`Email inválido (formato incorreto)`);
+                console.timeEnd(`⏱️  [${requestId}] Validações`);
+                console.timeEnd(`⏱️  [${requestId}] Tempo total da requisição`);
+                console.log(`❌ Email inválido (formato incorreto)`);
                 res.status(400).json({
                     message: 'Email inválido'
                 });
@@ -52,8 +60,10 @@ class EmailController {
 
             // Validação do domínio - APENAS servidores válidos são permitidos
             if (!ServidoresValidos.includes(dominio)) {
-                console.log(`Domínio de email não permitido: ${dominio}`);
-                console.log(`Domínios válidos: ${ServidoresValidos.join(', ')}`);
+                console.timeEnd(`⏱️  [${requestId}] Validações`);
+                console.timeEnd(`⏱️  [${requestId}] Tempo total da requisição`);
+                console.log(`❌ Domínio de email não permitido: ${dominio}`);
+                console.log(`   Domínios válidos: ${ServidoresValidos.join(', ')}`);
                 res.status(400).json({
                     message: 'Domínio de email não permitido',
                     dominio: dominio,
@@ -63,18 +73,24 @@ class EmailController {
             }
 
             console.log(`   ✓ Domínio válido: ${dominio}`);
+            console.timeEnd(`⏱️  [${requestId}] Validações`);
 
             const apiKeyFromHeader = req.headers['x-api-key'] as string;
 
             // Busca credenciais
+            console.time(`⏱️  [${requestId}] Buscar credenciais`);
             const credentials = await this.apiKeyService.obterUsuarioPorApiKey(apiKeyFromHeader);
+            console.timeEnd(`⏱️  [${requestId}] Buscar credenciais`);
 
             if (!credentials) {
+                console.timeEnd(`⏱️  [${requestId}] Tempo total da requisição`);
+                console.log(`❌ Credenciais não encontradas`);
                 res.status(401).json({ message: 'Credenciais não encontradas' });
                 return;
             }
 
             // 1. Registra o email no banco como 'pending' IMEDIATAMENTE
+            console.time(`⏱️  [${requestId}] Registrar email no MongoDB`);
             const emailId = await this.emailService.registrarEmail({
                 to,
                 sender: credentials.email,
@@ -83,8 +99,10 @@ class EmailController {
                 data,
                 apiKeyUser: req.apiKeyUser || credentials
             });
+            console.timeEnd(`⏱️  [${requestId}] Registrar email no MongoDB`);
 
             // 2. Adiciona o trabalho na Fila Redis
+            console.time(`⏱️  [${requestId}] Adicionar job na fila Redis`);
             await emailQueue.add('send-email-job', {
                 emailId, // Passamos o ID para o worker atualizar o status depois
                 to,
@@ -96,10 +114,13 @@ class EmailController {
                     pass: credentials.pass
                 }
             });
+            console.timeEnd(`⏱️  [${requestId}] Adicionar job na fila Redis`);
 
-            console.log(`Job adicionado à fila para o email ${emailId}`);
+            console.log(`✅ Job adicionado à fila para o email ${emailId}`);
 
             // 3. Responde imediatamente
+            console.timeEnd(`⏱️  [${requestId}] Tempo total da requisição`);
+            
             res.status(202).json({
                 message: 'E-mail na fila de processamento',
                 status: 'pending',
@@ -107,7 +128,8 @@ class EmailController {
             });
 
         } catch (error) {
-            console.error(`Erro ao enfileirar:`, error);
+            console.timeEnd(`⏱️  [${requestId}] Tempo total da requisição`);
+            console.error(`❌ Erro ao enfileirar:`, error);
             res.status(500).json({
                 message: 'Erro ao processar requisição',
                 error: (error as Error).message

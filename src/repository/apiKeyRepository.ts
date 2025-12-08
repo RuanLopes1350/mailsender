@@ -2,7 +2,7 @@ import ApiKeyModel, { IApiKey } from '../models/apiKey.js';
 
 // Repositório responsável por todas as operações de API Keys no banco de dados
 class ApiKeyRepository {
-    
+
     // Cria uma nova API Key no banco de dados
     async criar(apiKeyData: Partial<IApiKey>): Promise<IApiKey> {
         const apiKey = new ApiKeyModel(apiKeyData);
@@ -61,6 +61,11 @@ class ApiKeyRepository {
     // Lista todas as API Keys (incluindo inativas) para administração
     async listarTodas(): Promise<IApiKey[]> {
         return await ApiKeyModel.find({}).sort({ lastUsed: -1 });
+    }
+
+    // Busca direta no index pelo prefixo da API Key
+    async buscarPorPrefix(prefix: string): Promise<IApiKey | null> {
+        return await ApiKeyModel.findOne({ prefix, isActive: true });
     }
 }
 
