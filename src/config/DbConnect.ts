@@ -20,8 +20,14 @@ class DbConnect {
             mongoose.connection.on('disconnected', () => {
             });
 
-            await mongoose.connect(mongoUri).then( () =>
-                console.log('Conexão com o banco de dados bem sucedida!')
+            await mongoose.connect(mongoUri, {
+                maxPoolSize: 20,           // Máximo de 20 conexões simultâneas
+                minPoolSize: 5,            // Mantém 5 conexões sempre abertas
+                serverSelectionTimeoutMS: 5000,
+                socketTimeoutMS: 45000,
+                family: 4                  // Force IPv4
+            }).then(() =>
+                console.log('✅ Conexão com MongoDB estabelecida (Pool: 5-20 conexões)')
             )
 
         } catch (erro) {

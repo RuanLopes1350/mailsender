@@ -18,12 +18,18 @@ class EmailRepository {
 
     // Busca todos os emails de um usuário específico
     async buscarPorUsuario(apiKeyUser: IApiKey): Promise<IEmail[]> {
-        return await EmailModel.find({ apiKeyUser }).sort({ createdAt: -1 });
+        return await EmailModel.find({ apiKeyUser })
+            .sort({ createdAt: -1 })
+            .lean() as any;
     }
 
     // Busca emails recentes (limitado)
     async buscarRecentes(limite: number = 10): Promise<IEmail[]> {
-        return await EmailModel.find({}).sort({ createdAt: -1 }).limit(limite).populate('apiKeyUser');
+        return await EmailModel.find({})
+            .sort({ createdAt: -1 })
+            .limit(limite)
+            .populate('apiKeyUser')
+            .lean() as any;
     }
 
     // Atualiza o status de um email
@@ -54,35 +60,44 @@ class EmailRepository {
     }
 
     // Obtém estatísticas de emails
-    async obterEstatisticas(): Promise<{
-        total: number;
-        enviados: number;
-        falhas: number;
-        pendentes: number;
-        hoje: number;
-    }> {
+    async obterEstatisticas() {
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
 
-        const [total, enviados, falhas, pendentes, emailsHoje] = await Promise.all([
-            EmailModel.countDocuments({}),
-            EmailModel.countDocuments({ status: 'sent' }),
-            EmailModel.countDocuments({ status: 'failed' }),
-            EmailModel.countDocuments({ status: 'pending' }),
-            EmailModel.countDocuments({ createdAt: { $gte: hoje } })
+        const stats = await EmailModel.aggregate([
+            {
+                $facet: {
+                    porStatus: [
+                        { $group: { _id: '$status', count: { $sum: 1 } } }
+                    ],
+                    total: [
+                        { $count: 'count' }
+                    ],
+                    hoje: [
+                        { $match: { createdAt: { $gte: hoje } } },
+                        { $count: 'count' }
+                    ]
+                }
+            }
         ]);
 
+        const statusMap = Object.fromEntries(
+            stats[0].porStatus.map((s: any) => [s._id, s.count])
+        );
+
         return {
-            total,
-            enviados,
-            falhas,
-            pendentes,
-            hoje: emailsHoje
+            total: stats[0].total[0]?.count || 0,
+            enviados: statusMap.sent || 0,
+            falhas: statusMap.failed || 0,
+            pendentes: statusMap.pending || 0,
+            hoje: stats[0].hoje[0]?.count || 0
         };
     }
 
     async buscarEmailPorId(id: string): Promise<IEmail | null> {
-        return await EmailModel.findById(id).populate('apiKeyUser');
+        return await EmailModel.findById(id)
+            .populate('apiKeyUser')
+            .lean() as any;
     }
 
     async listarTodosEmails(filtros: any = {}): Promise<IEmail[]> {
@@ -91,7 +106,8 @@ class EmailRepository {
 
             const resultado = await EmailModel.find(query)
                 .sort({ createdAt: -1 })
-                .populate('apiKeyUser');
+                .populate('apiKeyUser')
+                .lean() as any;
 
             return resultado;
         } catch (error) {
@@ -100,7 +116,8 @@ class EmailRepository {
             // Fallback: retorna todos os emails sem filtro
             return await EmailModel.find({})
                 .sort({ createdAt: -1 })
-                .populate('apiKeyUser');
+                .populate('apiKeyUser')
+                .lean() as any;
         }
     }
 }

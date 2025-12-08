@@ -75,5 +75,8 @@ emailSchema.pre('save', function(next) {
 
 // Model do Mongoose
 const EmailModel = mongoose.model<IEmail>('Email', emailSchema);
+emailSchema.index({ apiKeyUser: 1, createdAt: -1 });
+emailSchema.index({ status: 1, createdAt: -1 });
+emailSchema.index({ createdAt: -1, status: 1 });
 
 export default EmailModel;

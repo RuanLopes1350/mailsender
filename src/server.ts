@@ -105,6 +105,13 @@ async function iniciarServidor() {
                 // Configuração já existe
                 console.log('ℹ️  Configuração já existe');
             }
+
+            // Inicia limpeza automática de cache de API Keys expiradas
+            setInterval(() => {
+                apiKeyController['apiKeyService'].limparCacheExpirado();
+            }, 600000); // A cada 10 minutos
+            console.log('🔄 Limpeza automática de cache de API Keys iniciada (a cada 10 min)');
+
             console.log(`\n✅ Servidor rodando na porta ${PORT}`);
             console.log(`📡 API disponível em: http://localhost:${PORT}/api`);
             console.log(`📊 Status: http://localhost:${PORT}/api/status`);
