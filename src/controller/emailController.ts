@@ -241,6 +241,65 @@ class EmailController {
         }
     }
 
+    buscarEmailPorIdComApiKey = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const emailId = req.params.id;
+            const { apiKey } = req.body;
+
+            if (!apiKey) {
+                res.status(400).json({ message: 'API Key é obrigatória no body' });
+                return;
+            }
+
+            console.log(`\n🔍 Buscando detalhes do email ID: ${emailId} com API Key...`);
+            console.log(`   🔑 API Key recebida: ${apiKey.substring(0, 8)}...`);
+
+            // Valida a API Key
+            const valido = await this.apiKeyService.validarApiKey(apiKey);
+            if (!valido) {
+                console.log(`   ❌ API Key inválida`);
+                res.status(403).json({ message: 'API key inválida' });
+                return;
+            }
+
+            // Busca o usuário pela API Key
+            const apiKeyUser = await this.apiKeyService.obterUsuarioPorApiKey(apiKey);
+            if (!apiKeyUser) {
+                console.log(`   ❌ Usuário não encontrado`);
+                res.status(401).json({ message: 'Usuário não autenticado' });
+                return;
+            }
+
+            console.log(`   ✓ API Key válida para usuário: ${apiKeyUser.usuario}`);
+
+            // Busca o email
+            const email = await this.emailService.buscarEmailPorId(emailId);
+
+            if (!email) {
+                console.log(`   ⚠️ Email não encontrado`);
+                res.status(404).json({ message: 'Email não encontrado' });
+                return;
+            }
+
+            // Verifica se o email pertence ao usuário
+            if (email.sender !== apiKeyUser.email) {
+                console.log(`   ❌ Email não pertence ao usuário`);
+                res.status(403).json({ message: 'Você não tem permissão para acessar este email' });
+                return;
+            }
+
+            console.log(`   ✓ Detalhes obtidos com sucesso`);
+            res.json(email);
+
+        } catch (error) {
+            console.error(`   ❌ Erro ao obter detalhes do email:`, error);
+            res.status(500).json({
+                message: 'Erro ao obter detalhes do email',
+                error: (error as Error).message
+            });
+        }
+    }
+
     async listarTodosEmails(req: Request, res: Response): Promise<void> {
         try {
             console.log(`\n📋 Listando todos os emails...`);
