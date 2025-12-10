@@ -70,7 +70,7 @@ app.get('/api/emails/todos', authMiddleware, emailController.listarTodosEmails.b
 
 // Rotas Protegidas por API Key (para Desenvolvedores)
 app.post('/api/emails/send', apiKeyMiddleware, emailController.enviarEmail);
-app.get('/api/emails/meus', apiKeyMiddleware, emailController.listarEmailsDoUsuario);
+app.post('/api/emails/meus', emailController.listarEmailsDoUsuario);
 
 // Rota 404
 app.use((req, res) => {

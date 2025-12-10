@@ -173,15 +173,35 @@ class EmailController {
     };
 
     // Lista emails do usuário autenticado
-    listarEmailsDoUsuario = async (req: RequestWithUser, res: Response): Promise<void> => {
+    listarEmailsDoUsuario = async (req: Request, res: Response): Promise<void> => {
         try {
-            if (!req.apiKeyUser) {
+            const { apiKey } = req.body;
+
+            if (!apiKey) {
+                res.status(400).json({ message: 'API Key é obrigatória no body' });
+                return;
+            }
+
+            console.log(`\n📋 Validando API Key e listando emails...`);
+            console.log(`   🔑 API Key recebida: ${apiKey.substring(0, 8)}...`);
+
+            // Valida a API Key
+            const valido = await this.apiKeyService.validarApiKey(apiKey);
+            if (!valido) {
+                console.log(`   ❌ API Key inválida`);
+                res.status(403).json({ message: 'API key inválida' });
+                return;
+            }
+
+            // Busca o usuário pela API Key
+            const apiKeyUser = await this.apiKeyService.obterUsuarioPorApiKey(apiKey);
+            if (!apiKeyUser) {
+                console.log(`   ❌ Usuário não encontrado`);
                 res.status(401).json({ message: 'Usuário não autenticado' });
                 return;
             }
 
-            console.log(`\n📋 Listando emails do usuário: ${req.apiKeyUser}...`);
-            const apiKeyUser = req.apiKeyUser as IApiKey;
+            console.log(`   ✓ API Key válida para usuário: ${apiKeyUser.usuario}`);
 
             const emails = await this.emailService.buscarEmailsDoUsuario(apiKeyUser);
             console.log(`   ✓ ${emails.length} email(s) encontrado(s)`);
