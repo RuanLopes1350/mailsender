@@ -1,12 +1,16 @@
 import { Response, NextFunction } from 'express';
 import { RequestWithUser } from './apiKeyMiddleware.js';
+import { RequestWithAdmin } from './authMiddleware.js';
 import RequestService from '../service/requestService.js';
+
+// Interface combinada para suportar ambos os tipos de autenticação
+interface RequestWithAuth extends RequestWithUser, RequestWithAdmin {}
 
 const requestService = new RequestService();
 
-// Middleware para logar todas as requisições
+// Middleware para logar requisições autenticadas (JWT ou API Key)
 export function requestLoggerMiddleware(
-    req: RequestWithUser,
+    req: RequestWithAuth,
     res: Response,
     next: NextFunction
 ): void {
@@ -29,15 +33,24 @@ export function requestLoggerMiddleware(
         const responseTime = Date.now() - startTime;
         const statusCode = res.statusCode;
 
-        // Normalize apiKeyUser into a string (id/key/json) because registrarRequisicao expects string | undefined
-        const apiKeyUserString: string | undefined = req.apiKeyUser
-            ? (typeof req.apiKeyUser === 'string'
-                ? req.apiKeyUser
-                : (((req.apiKeyUser as unknown) as { id?: string; _id?: string; key?: string }).id
-                    ?? ((req.apiKeyUser as unknown) as { id?: string; _id?: string; key?: string })._id
-                    ?? ((req.apiKeyUser as unknown) as { id?: string; _id?: string; key?: string }).key
-                    ?? JSON.stringify(req.apiKeyUser)))
-            : undefined;
+        // Determina o usuário baseado no tipo de autenticação
+        let userIdentifier: string | undefined = undefined;
+
+        // 1. Verifica se é uma requisição com JWT (admin logado)
+        if (req.admin && typeof req.admin === 'object' && 'username' in req.admin) {
+            userIdentifier = `Admin: ${req.admin.username}`;
+        }
+        // 2. Verifica se é uma requisição com API Key válida
+        else if (req.apiKeyUser && typeof req.apiKeyUser === 'object' && 'usuario' in req.apiKeyUser) {
+            userIdentifier = `API Key: ${req.apiKeyUser.usuario}`;
+        }
+
+        // Só registra se houver usuário identificado (JWT ou API Key)
+        if (!userIdentifier) {
+            // Não registra requisições não autenticadas (públicas)
+            console.log(`📊 ${method} ${path} - ${statusCode} - ${responseTime}ms [Público]`);
+            return;
+        }
 
         // Registra a requisição no banco de dados de forma assíncrona
         requestService.registrarRequisicao({
@@ -47,12 +60,12 @@ export function requestLoggerMiddleware(
             ip,
             userAgent,
             responseTime,
-            apiKeyUser: apiKeyUserString
+            apiKeyUser: userIdentifier
         }).catch(error => {
             console.error('Erro ao registrar requisição:', error);
         });
 
-        console.log(`📊 ${method} ${path} - ${statusCode} - ${responseTime}ms`);
+        console.log(`📊 ${method} ${path} - ${statusCode} - ${responseTime}ms [${userIdentifier}]`);
     };
 
     // Sobrescreve o método res.json para capturar quando a resposta é enviada
