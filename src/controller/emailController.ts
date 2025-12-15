@@ -3,6 +3,7 @@ import { RequestWithUser } from '../middleware/apiKeyMiddleware.js';
 import EmailService from '../service/emailService.js';
 import EmailSenderService from '../service/emailSenderService.js';
 import ApiKeyService from '../service/apiKeyService.js';
+import ConfigService from '../service/configService.js';
 import { IApiKey } from '../models/apiKey.js';
 import { emailQueue } from '../utils/queue/emailQueue.js';
 import { IEmail } from '../models/email.js';
@@ -14,10 +15,12 @@ const ServidoresValidos = process.env.SERVIDORES_VALIDOS
 class EmailController {
     private emailService: EmailService;
     private apiKeyService: ApiKeyService;
+    private configService: ConfigService;
 
     constructor() {
         this.emailService = new EmailService();
         this.apiKeyService = new ApiKeyService();
+        this.configService = new ConfigService();
     }
 
     enviarEmail = async (req: RequestWithUser, res: Response): Promise<void> => {
@@ -103,6 +106,11 @@ class EmailController {
 
             // 2. Adiciona o trabalho na Fila Redis
             console.time(`⏱️  [${requestId}] Adicionar job na fila Redis`);
+            
+            // Busca o número atualizado de retentativas
+            const config = await this.configService.obterConfig();
+            const retentativas = config?.retentativas || 3;
+            
             await emailQueue.add('send-email-job', {
                 emailId, // Passamos o ID para o worker atualizar o status depois
                 to,
@@ -113,6 +121,14 @@ class EmailController {
                     email: credentials.email,
                     pass: credentials.pass
                 }
+            }, {
+                attempts: retentativas, // Define tentativas dinamicamente
+                backoff: {
+                    type: 'exponential',
+                    delay: 5000, // Espera 5s entre tentativas
+                },
+                removeOnComplete: true,
+                removeOnFail: false,
             });
             console.timeEnd(`⏱️  [${requestId}] Adicionar job na fila Redis`);
 
