@@ -46,18 +46,18 @@ class ConfigController {
 
     async retentarEnvio(req: Request, res: Response) {
         try {
-            const novoValor = req.body.retentativas;
+            const novoValor = req.body.novoValor;
             const data = await this.service.retentarEnvio(novoValor);
             return res.status(200).json({
                 success: true,
-                message: 'Retentativa de envio iniciada com sucesso',
+                message: 'Retentativas atualizadas com sucesso',
                 data
             });
         } catch (error) {
             console.log(error);
             return res.status(500).json({
                 success: false,
-                message: `Erro ao iniciar retentativa de envio: ${error instanceof Error ? error.message : String(error)}`
+                message: `Erro ao atualizar retentativas: ${error instanceof Error ? error.message : String(error)}`
             });
         }
     }
