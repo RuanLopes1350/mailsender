@@ -65,6 +65,7 @@ app.post('/api/admin/criar', authMiddleware, adminController.criarAdmin.bind(adm
 app.delete('/api/admin/deletar/:id', authMiddleware, adminController.deletarAdmin.bind(adminController));
 app.get('/api/config', authMiddleware, configController.obterConfig.bind(configController));
 app.post('/api/config/aprovar', authMiddleware, configController.aprovarApiKey.bind(configController));
+app.post('/api/config/retentar', authMiddleware, configController.retentarEnvio.bind(configController));
 app.get('/api/emails/detalhes/:id', authMiddleware, emailController.buscarEmailPorId.bind(emailController));
 app.get('/api/emails/todos', authMiddleware, emailController.listarTodosEmails.bind(emailController));
 

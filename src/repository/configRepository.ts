@@ -68,6 +68,27 @@ class ConfigRepository {
             throw new Error(`Erro ao buscar configuração: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
+
+    async retentarEnvio(novoValor: number) {
+        try {
+            const currentConfig = await this.model.findOne({});
+
+            if (!currentConfig) {
+                throw new Error('Configuração não encontrada no banco de dados');
+            }
+
+            const data = await this.model.findOneAndUpdate(
+                {},
+                { $set: { retentativas: novoValor } },
+                { new: true }
+            );
+
+            return data;
+        } catch (error) {
+            console.log(error);
+            throw new Error(`Erro ao iniciar retentativa de envio: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
 }
 
 export default ConfigRepository

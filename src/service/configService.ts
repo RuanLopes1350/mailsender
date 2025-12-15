@@ -35,6 +35,20 @@ class ConfigService {
             throw new Error(`Erro ao buscar configuração: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
+
+    async retentarEnvio(novoValor: number) {
+        try {
+            if(isNaN(novoValor) || novoValor < 1 || novoValor > 5 || !Number.isInteger(novoValor)) {
+                throw new Error('O valor de retentativas deve ser um número inteiro entre 1 e 5');
+            }
+
+            const data = await this.repository.retentarEnvio(novoValor);
+            return data;
+        } catch (error) {
+            console.log(error);
+            throw new Error(`Erro ao iniciar retentativa de envio: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
 }
 
 export default ConfigService;
