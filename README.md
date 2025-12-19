@@ -11,7 +11,7 @@
 
 **Microserviço profissional para envio de emails com templates personalizáveis, painel administrativo completo e autenticação por API Keys.**
 
-[🚀 Ver Demo](https://mailsender-one.vercel.app/painel) • [📖 Tutorial](TUTORIAL.md) • [� Autenticação](AUTHENTICATION.md) • [�🐛 Reportar Bug](https://github.com/RuanLopes1350/mailsender-ts/issues) • [📄 Documentação](PROJETO.md)
+[📖 Tutorial](TUTORIAL.md) • [🔐 Autenticação](AUTHENTICATION.md) • [🐛 Reportar Bug](https://github.com/RuanLopes1350/mailsender-ts/issues) • [📄 Documentação](PROJETO.md)
 
 </div>
 
@@ -28,7 +28,7 @@
 - [Como Usar](#-como-usar)
 - [Templates](#-templates)
 - [Painel Administrativo](#-painel-administrativo)
-- [Deploy na Vercel](#-deploy-na-vercel)
+- [Deploy com Docker](#-deploy-com-docker)
 - [API Endpoints](#-api-endpoints)
 - [Estrutura do Projeto](#-estrutura-do-projeto)
 - [Segurança](#-segurança)
@@ -50,7 +50,7 @@
 - ✅ **Totalmente Personalizável** - Adapte cores, textos, botões e logos ao seu sistema
 - ✅ **Seguro** - Autenticação por API Keys com hash bcrypt
 - ✅ **Monitoramento** - Painel administrativo com estatísticas em tempo real
-- ✅ **Pronto para Produção** - Deploy fácil na Vercel ou qualquer plataforma
+- ✅ **Pronto para Produção** - Deploy fácil com Docker ou Kubernetes
 - ✅ **Open Source** - Código aberto e gratuito
 
 ---
@@ -85,7 +85,7 @@
 
 ### 🚀 Deploy
 - ✅ **Servidor local** com hot reload
-- ✅ **Vercel** pronto para serverless
+- ✅ **Docker** e **Kubernetes** prontos
 - ✅ **Variáveis de ambiente** configuráveis
 - ✅ **TypeScript** compilado para produção
 
@@ -126,7 +126,7 @@
 ### DevOps
 - tsx (dev runtime)
 - TypeScript compiler
-- Vercel (serverless)
+- Docker & Kubernetes
 - dotenv
 - Git
 
@@ -555,47 +555,32 @@ Acesse `http://localhost:5015/painel` para gerenciar o sistema.
 
 ---
 
-## 🚀 Deploy na Vercel
+## 🐳 Deploy com Docker
 
-O projeto está pronto para deploy serverless na Vercel.
+O projeto inclui configuração completa para deploy com Docker e docker-compose.
 
-### 1️⃣ Preparação
+### 1️⃣ Usando Docker Compose (Recomendado)
 
-O arquivo `vercel.json` já está configurado:
-```json
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "src/api/api.ts",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    { "src": "/painel/(.*)", "dest": "/public/$1" },
-    { "src": "/(.*)", "dest": "/src/api/api.ts" }
-  ]
-}
-```
-
-### 2️⃣ Deploy
-
-**Via CLI:**
 ```bash
-npm install -g vercel
-vercel
+# Clone o repositório
+git clone https://github.com/RuanLopes1350/mailsender-ts.git
+cd mailsender-ts
+
+# Configure o arquivo .env
+cp .env.example .env
+# Edite o .env com suas configurações
+
+# Suba os containers
+docker-compose up -d
 ```
 
-**Via GitHub:**
-1. Conecte seu repositório no [Vercel Dashboard](https://vercel.com)
-2. Configure as variáveis de ambiente
-3. Deploy automático a cada push
+### 2️⃣ Variáveis de Ambiente
 
-### 3️⃣ Variáveis de Ambiente
-
-Configure no painel da Vercel:
+Configure no arquivo `.env`:
 ```
-DB_URL=mongodb+srv://usuario:senha@cluster.mongodb.net/mailsender
+DB_URL=mongodb://mongo:27017/mailsender
+REDIS_HOST=redis
+REDIS_PORT=6379
 SENDER_EMAIL=seu-email@gmail.com
 SENDER_PASSWORD=app-password
 MASTER_KEY=sua-chave-mestra-secreta
@@ -607,19 +592,12 @@ NODE_ENV=production
 
 ⚠️ **IMPORTANTE**: Use senhas fortes diferentes em produção!
 
-### 4️⃣ Diferenças de URL
+### 3️⃣ Deploy em Kubernetes
 
-**Local:**
-```
-http://localhost:5015/api/emails/send
-```
-
-**Vercel:**
-```
-https://seu-projeto.vercel.app/api/emails/send
-```
-
-⚠️ **Nota:** Na Vercel, todas as rotas têm prefixo `/api/`
+Consulte a pasta `deploy/` para os manifests de Kubernetes:
+- `deploy-backend.yaml` - Deployment do backend
+- `deploy-mongodb.yaml` - Deployment do MongoDB
+- `deploy-redis.yaml` - Deployment do Redis
 
 ---
 
@@ -763,15 +741,9 @@ curl -X DELETE http://localhost:5015/api/keys/producao \
 ```
 mailsender-ts/
 ├── src/
-│   ├── api/
-│   │   └── api.ts              # API serverless (Vercel)
-│   ├── auth/
-│   │   ├── apiKey.ts           # Gerenciamento de API Keys
-│   │   ├── apiKeyMiddleware.ts # Middleware de autenticação
-│   │   └── masterKey.ts        # Validação de chave mestra
 │   ├── config/
-│   │   ├── database.ts         # Conexão MongoDB
-│   │   └── mail.ts             # Configuração Nodemailer
+│   │   ├── DbConnect.ts        # Conexão MongoDB
+│   │   └── redis.ts            # Configuração Redis
 │   ├── mail/
 │   │   ├── index.ts            # Serviço de envio
 │   │   └── templates/
@@ -792,8 +764,7 @@ mailsender-ts/
 │   ├── styles.css              # Estilos do painel
 │   └── script.js               # Lógica do painel
 ├── .env                        # Variáveis de ambiente
-├── .vercelignore               # Arquivos ignorados no deploy
-├── vercel.json                 # Configuração Vercel
+├── .dockerignore               # Arquivos ignorados no Docker
 ├── package.json                # Dependências
 ├── tsconfig.json               # Configuração TypeScript
 ├── TUTORIAL.md                 # Tutorial completo de uso
@@ -972,16 +943,6 @@ MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/mailsender
 **2. Teste a conexão:**
 ```bash
 mongosh "mongodb://localhost:27017/mailsender"
-```
-
-### Erro no deploy da Vercel
-
-**1. Verifique as variáveis de ambiente**
-**2. Confira os logs no painel Vercel**
-**3. Teste localmente primeiro:**
-```bash
-npm run build
-npm start
 ```
 
 ### Não consigo fazer login no painel

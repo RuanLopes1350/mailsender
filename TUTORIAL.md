@@ -725,24 +725,22 @@ curl -X DELETE http://localhost:5015/api/keys/meu-sistema-producao \
 
 ## 🌐 URLs de Produção
 
-Quando fizer deploy na Vercel, substitua a URL base:
+Quando fizer deploy em produção, substitua a URL base:
 
 **Local:**
 ```
 http://localhost:5015
 ```
 
-**Vercel:**
+**Produção (exemplo com Docker/Kubernetes):**
 ```
-https://seu-projeto.vercel.app
+https://seu-dominio.com
 ```
 
 **Exemplo:**
 ```javascript
-const API_URL = 'https://seu-projeto.vercel.app/api/emails/send';
+const API_URL = 'https://seu-dominio.com/api/emails/send';
 ```
-
-⚠️ **Nota:** Na Vercel, as rotas têm prefixo `/api/`
 
 ---
 
@@ -767,7 +765,7 @@ const API_URL = 'https://seu-projeto.vercel.app/api/emails/send';
 - [ ] Testar envio pelo painel administrativo
 - [ ] Implementar no código do seu sistema
 - [ ] Testar com email real
-- [ ] Configurar variáveis de ambiente na Vercel (se for fazer deploy)
+- [ ] Configurar variáveis de ambiente em produção (Docker/Kubernetes)
 - [ ] Ajustar URL base para produção
 - [ ] Desativar chaves de teste em produção
 

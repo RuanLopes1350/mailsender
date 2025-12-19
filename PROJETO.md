@@ -93,7 +93,7 @@ Existem plataformas de envio de email similares (SendGrid, Mailgun, AWS SES, Pos
   * **Conclusão:** Tecnicamente, o projeto é viável.  
 * **Viabilidade Econômica:**  
   * **Custos de Desenvolvimento:** Meu tempo como desenvolvedor principal.  
-  * **Custos de Infraestrutura:** Variam conforme a hospedagem. Pode ser baixo (self-hosted, Vercel/Mongo Atlas gratuitos) ou aumentar com serviços pagos (Redis/RabbitMQ Cloud).  
+  * **Custos de Infraestrutura:** Variam conforme a hospedagem. Pode ser baixo (self-hosted, Docker, Mongo Atlas gratuito) ou aumentar com serviços pagos (Redis/RabbitMQ Cloud).  
   * **Custos Operacionais:** Custo do provedor de email (Gmail tem limites gratuitos).  
   * **Conclusão:** É economicamente viável, principalmente para uso interno ou com hospedagem de baixo custo.  
 * **Viabilidade Operacional:**  
@@ -188,7 +188,7 @@ Aqui estão os requisitos funcionais e não funcionais que definem o que o Mail 
 | RNF050 | Manutenibilidade | O código deve ser modular, comentado, seguir padrões (TypeScript/Node.js) e ter baixo acoplamento. | Alta |
 | RNF051 | Observabilidade | O sistema deve gerar logs detalhados e estruturados para diagnóstico (usando níveis como info, warn, error). | Média |
 | RNF052 | Configurabilidade | Configurações críticas (porta, URIs, credenciais master) devem ser gerenciadas via variáveis de ambiente. | Alta |
-| RNF060 | Implantação | O sistema deve ser facilmente implantável localmente (dev) e em plataformas como Vercel ou via Docker. | Alta |
+| RNF060 | Implantação | O sistema deve ser facilmente implantável localmente (dev) e via Docker/Kubernetes. | Alta |
 
 # **PROTOTIPAGEM**
 
